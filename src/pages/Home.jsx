@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { JOGOS } from '../data/mockData';
 
 function FormaTag({ resultado }) {
   const colors = { V: '#00e5a0', E: '#ffb830', D: '#ff4d6d' };
@@ -29,8 +28,9 @@ function OddPill({ label, value, highlight }) {
   );
 }
 
-export default function Home({ onSelectJogo }) {
+export default function Home({ onSelectJogo, jogos: jogosProp, apiStatus }) {
   const [filtro, setFiltro] = useState('todos');
+  const JOGOS = jogosProp || [];
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 20px' }}>
