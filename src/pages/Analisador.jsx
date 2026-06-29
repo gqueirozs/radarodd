@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { getLogo, getStats, getH2H } from '../data/statsDB';
 
 const STYLES = `
@@ -169,6 +170,7 @@ function MktRow({ label, sub, odd, ev }) {
 
 export default function Analisador({ jogo, onVoltar }) {
   const [aba, setAba] = useState('sugestoes');
+  const isMob = useIsMobile(640);
   if (!jogo) return null;
 
   const o    = jogo.odds || {};
@@ -198,7 +200,7 @@ export default function Analisador({ jogo, onVoltar }) {
   return (
     <>
       <style>{STYLES}</style>
-      <div className="ana-wrap">
+      <div className="ana-wrap" style={{ padding: isMob ? '14px 12px 48px' : '20px 16px 48px' }}>
         <button className="ana-back" onClick={onVoltar}>← Voltar</button>
 
         {/* Header */}
@@ -212,7 +214,7 @@ export default function Analisador({ jogo, onVoltar }) {
             <div className="ana-team-block">
               <FlagImg nome={jogo.casa.nome}/>
               <div style={{ minWidth:0 }}>
-                <div className="ana-team-name" style={{ fontSize:22 }}>{jogo.casa.nome}</div>
+                <div className="ana-team-name" style={{ fontSize: isMob ? 17 : 22 }}>{jogo.casa.nome}</div>
                 {stC && <div className="ana-team-sub">{stC.gols_marcados}G · #{stC.ranking_fifa} FIFA</div>}
               </div>
             </div>
@@ -232,7 +234,7 @@ export default function Analisador({ jogo, onVoltar }) {
 
             <div className="ana-team-block ana-team-block-right">
               <div style={{ minWidth:0 }}>
-                <div className="ana-team-name" style={{ fontSize:22, textAlign:'right' }}>{jogo.fora.nome}</div>
+                <div className="ana-team-name" style={{ fontSize: isMob ? 17 : 22, textAlign:'right' }}>{jogo.fora.nome}</div>
                 {stF && <div className="ana-team-sub" style={{ textAlign:'right' }}>{stF.gols_marcados}G · #{stF.ranking_fifa} FIFA</div>}
               </div>
               <FlagImg nome={jogo.fora.nome}/>
@@ -315,7 +317,7 @@ export default function Analisador({ jogo, onVoltar }) {
             {(stC||stF) && (
               <>
                 <div className="ana-divider">Fase de grupos — Copa 2026</div>
-                <div className="ana-stats-grid" style={{ marginBottom:24 }}>
+                <div className="ana-stats-grid" style={{ marginBottom:24, gridTemplateColumns: isMob ? '1fr' : '1fr 1fr' }}>
                   {[[jogo.casa.nome,stC,'#00e5a0'],[jogo.fora.nome,stF,'#4d9fff']].map(([nome,st,cor])=>st&&(
                     <div key={nome} className="ana-stat-card">
                       <div className="ana-stat-header">
@@ -352,7 +354,7 @@ export default function Analisador({ jogo, onVoltar }) {
             {(stC?.forma_copa||stF?.forma_copa) && (
               <>
                 <div className="ana-divider">Últimos jogos na Copa</div>
-                <div className="ana-stats-grid" style={{ marginBottom:24 }}>
+                <div className="ana-stats-grid" style={{ marginBottom:24, gridTemplateColumns: isMob ? '1fr' : '1fr 1fr' }}>
                   {[[jogo.casa.nome,stC],[jogo.fora.nome,stF]].map(([nome,st])=>st?.forma_copa&&(
                     <div key={nome}>
                       <div style={{ fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:10 }}>{nome}</div>
@@ -401,7 +403,7 @@ export default function Analisador({ jogo, onVoltar }) {
 
             {/* Contexto Copa */}
             <div className="ana-divider">Contexto da Copa 2026</div>
-            <div className="ana-ctx-grid">
+            <div className="ana-ctx-grid" style={{ gridTemplateColumns: isMob ? '1fr' : 'repeat(3,1fr)' }}>
               {[{v:'2.99',l:'Gols por jogo',s:'Maior desde 1958',c:'#00e5a0'},{v:'61%',l:'Jogos +2.5 gols',s:'Fase de grupos',c:'#ffb830'},{v:'78%',l:'Decididos em 90min',s:'Fase de grupos',c:'#4d9fff'}].map(({v,l,s,c})=>(
                 <div key={l} className="ana-ctx-card">
                   <div className="ana-ctx-val" style={{ color:c }}>{v}</div>
@@ -462,7 +464,7 @@ export default function Analisador({ jogo, onVoltar }) {
                 <div style={{ color:'var(--text3)',fontSize:14 }}>Odds de placar não disponíveis.</div>
               </div>
             ) : (
-              <div className="ana-placares-grid">
+              <div className="ana-placares-grid" style={{ gridTemplateColumns: isMob ? '1fr' : 'repeat(3,1fr)' }}>
                 {['casa','empate','fora'].map(time=>{
                   const cor = time==='casa'?'#00e5a0':time==='fora'?'#4d9fff':'var(--text3)';
                   const nome = time==='casa'?jogo.casa.nome:time==='fora'?jogo.fora.nome:'Empate';
