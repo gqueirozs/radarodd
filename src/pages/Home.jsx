@@ -1,347 +1,294 @@
 import React, { useState } from 'react';
 import { getLogo, getStats } from '../data/statsDB';
 
-function calcScore(jogo) {
-  const vbs = (jogo.valueBets || []).filter(v => v.ev > 0);
-  if (!vbs.length) return 0;
-  const maxEv = Math.max(...vbs.map(v => v.ev || 0));
-  return Math.min(99, Math.round(40 + maxEv * 2.5 + vbs.length * 5));
+const STYLES = `
+.home-wrap { max-width: 860px; margin: 0 auto; padding: 28px 16px 48px; }
+.home-hero { margin-bottom: 28px; }
+.home-badges { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.home-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px;
 }
-
-function melhorSugestao(jogo) {
-  const vbs = (jogo.valueBets || []).filter(v => v.ev > 0);
-  if (!vbs.length) return null;
-  return vbs.reduce((a, b) => (a.ev > b.ev ? a : b));
+.home-badge-green { color: #00e5a0; background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.2); }
+.home-badge-grey  { color: var(--text3); background: var(--bg3); border: 1px solid var(--border); }
+.home-title { font-family: var(--font-display); font-weight: 800; color: var(--text); line-height: 1.15; letter-spacing: -.5px; margin-bottom: 10px; }
+.home-subtitle { color: var(--text3); font-size: 13px; line-height: 1.6; max-width: 480px; }
+.home-filters { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.home-filter {
+  padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  border: 1px solid var(--border); cursor: pointer; transition: all .15s;
+  background: var(--bg2); color: var(--text2);
 }
+.home-filter.active { background: #00e5a0; color: #000; border-color: transparent; }
+.home-cards { display: flex; flex-direction: column; gap: 10px; }
+.home-card {
+  background: var(--bg2); border-radius: 16px; cursor: pointer;
+  transition: background .2s, transform .2s, box-shadow .2s;
+  overflow: hidden; border: 1px solid var(--border);
+}
+.home-card.has-bets { border-color: rgba(0,229,160,.15); }
+.home-card:hover { background: var(--bg3); transform: translateY(-1px); box-shadow: 0 8px 32px rgba(0,0,0,.3); }
+.home-card-accent { height: 2px; background: linear-gradient(90deg, #00e5a0, transparent); }
+.home-card-body { padding: 16px 18px; }
+.home-card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 8px; }
+.home-card-time { font-size: 11px; color: var(--text3); font-weight: 500; }
+.home-card-teams { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.home-team { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.home-team-right { flex-direction: row-reverse; text-align: right; }
+.home-team-flag { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid rgba(255,255,255,.1); flex-shrink: 0; }
+.home-team-flag-placeholder {
+  width: 40px; height: 40px; border-radius: 8px; border: 2px solid var(--border);
+  background: var(--bg4); display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: var(--text3); font-size: 14px; flex-shrink: 0;
+}
+.home-team-name { font-family: var(--font-display); font-weight: 800; color: var(--text); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-team-sub  { font-size: 10px; color: var(--text3); margin-top: 2px; white-space: nowrap; }
+.home-odds { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; padding: 0 8px; }
+.home-odds-row { display: flex; gap: 6px; }
+.home-odd-cell { text-align: center; }
+.home-odd-val  { font-family: var(--font-mono); font-weight: 700; line-height: 1; }
+.home-odd-lbl  { font-size: 9px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: .05em; }
+.home-probbar  { margin-top: 10px; }
+.home-probbar-track { display: flex; border-radius: 4px; overflow: hidden; height: 4px; }
+.home-probbar-pcts  { display: flex; justify-content: space-between; margin-top: 4px; }
+.home-probbar-pct   { font-size: 10px; font-weight: 600; }
+.home-card-footer {
+  padding: 10px 18px 14px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.home-bet-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 11px; border-radius: 20px;
+  background: rgba(0,229,160,.08); border: 1px solid rgba(0,229,160,.2);
+  font-size: 11px; font-weight: 600; color: #00e5a0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;
+}
+.home-bet-ev { font-size: 10px; color: rgba(0,229,160,.7); font-family: var(--font-mono); flex-shrink: 0; }
+.home-see-more { font-size: 12px; color: #00e5a0; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.home-no-bet { font-size: 12px; color: var(--text3); }
+.home-footer { margin-top: 32px; padding: 14px 16px; background: var(--bg2); border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; font-size: 12px; color: var(--text3); line-height: 1.6; }
+.score-ring { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
+.score-ring-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 
-function FlagImg({ nome, size = 44 }) {
+@media (max-width: 600px) {
+  .home-wrap { padding: 20px 12px 48px; }
+  .home-title { font-size: 26px !important; }
+  .home-card-body { padding: 14px 14px; }
+  .home-team-name { font-size: 15px !important; }
+  .home-odd-val { font-size: 14px !important; }
+  .home-card-footer { padding: 10px 14px 12px; }
+  .home-bet-chip { max-width: 160px; font-size: 10px; }
+  .home-team-flag, .home-team-flag-placeholder { width: 34px; height: 34px; }
+}
+@media (max-width: 400px) {
+  .home-odd-val { font-size: 12px !important; }
+  .home-odds { padding: 0 4px; }
+  .home-team-sub { display: none; }
+}
+`;
+
+function FlagImg({ nome, size = 40 }) {
   const logo = getLogo(nome);
-  if (!logo) return (
-    <div style={{
-      width: size, height: size, borderRadius: 8,
-      background: 'var(--bg4)', border: '2px solid var(--border)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.4, fontWeight: 700, color: 'var(--text3)',
-      flexShrink: 0,
-    }}>{nome?.charAt(0) || '?'}</div>
-  );
-  return (
-    <img src={logo} alt={nome} style={{
-      width: size, height: size, borderRadius: 8,
-      objectFit: 'cover', border: '2px solid rgba(255,255,255,.1)',
-      flexShrink: 0,
-    }} onError={e => { e.target.style.display = 'none'; }} />
-  );
+  const st = { width: size, height: size, borderRadius: 8, objectFit: 'cover', border: '2px solid rgba(255,255,255,.1)', flexShrink: 0 };
+  if (!logo) return <div className="home-team-flag-placeholder" style={{ width: size, height: size }}>{nome?.charAt(0) || '?'}</div>;
+  return <img src={logo} alt={nome} style={st} onError={e => { e.target.style.display='none'; }} />;
 }
 
 function ScoreRing({ score }) {
   if (!score) return null;
   const cor = score >= 70 ? '#00e5a0' : score >= 45 ? '#ffb830' : '#6b7280';
   const label = score >= 70 ? 'Alta' : score >= 45 ? 'Média' : 'Baixa';
-  const r = 16, circ = 2 * Math.PI * r;
-  const dash = (score / 100) * circ;
+  const r = 15, c = 2 * Math.PI * r, dash = (score / 100) * c;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
-      <svg width={42} height={42} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={21} cy={21} r={r} fill="none" stroke="var(--bg4)" strokeWidth={3} />
-        <circle cx={21} cy={21} r={r} fill="none" stroke={cor} strokeWidth={3}
-          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-          style={{ transition: 'stroke-dasharray .6s ease' }} />
-        <text x={21} y={21} textAnchor="middle" dominantBaseline="central"
-          style={{ fontSize: 10, fill: cor, fontWeight: 700, fontFamily: 'monospace' }}
-          transform={`rotate(90, 21, 21)`}>{score}</text>
+    <div className="score-ring">
+      <svg width={38} height={38} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={19} cy={19} r={r} fill="none" stroke="var(--bg4)" strokeWidth={3}/>
+        <circle cx={19} cy={19} r={r} fill="none" stroke={cor} strokeWidth={3}
+          strokeDasharray={`${dash} ${c}`} strokeLinecap="round"/>
+        <text x={19} y={19} textAnchor="middle" dominantBaseline="central"
+          style={{ fontSize: 9, fill: cor, fontWeight: 700, fontFamily: 'monospace' }}
+          transform={`rotate(90,19,19)`}>{score}</text>
       </svg>
-      <span style={{ fontSize: 9, color: cor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</span>
+      <span className="score-ring-label" style={{ color: cor }}>{label}</span>
     </div>
   );
 }
 
-function ProbBar({ casaNome, foraNome, oddCasa, oddFora, oddEmp }) {
+function ProbBar({ oddCasa, oddFora, oddEmp, nomeCasa, nomeFora }) {
   if (!oddCasa || !oddFora) return null;
-  const rc = 1 / oddCasa, re = oddEmp ? 1 / oddEmp : 0, rf = 1 / oddFora;
+  const rc = 1/oddCasa, re = oddEmp ? 1/oddEmp : 0, rf = 1/oddFora;
   const tot = rc + re + rf;
-  const pc = Math.round(rc / tot * 100);
-  const pe = Math.round(re / tot * 100);
-  const pf = Math.round(rf / tot * 100);
+  const pc = Math.round(rc/tot*100), pe = Math.round(re/tot*100), pf = Math.round(rf/tot*100);
   return (
-    <div style={{ marginTop: 12 }}>
-      <div style={{ display: 'flex', borderRadius: 4, overflow: 'hidden', height: 4 }}>
-        <div style={{ width: pc + '%', background: '#00e5a0' }} />
-        <div style={{ width: pe + '%', background: '#3d4451', margin: '0 1px' }} />
-        <div style={{ width: pf + '%', background: '#4d9fff' }} />
+    <div className="home-probbar">
+      <div className="home-probbar-track">
+        <div style={{ width: pc+'%', background: '#00e5a0' }}/>
+        <div style={{ width: pe+'%', background: 'var(--bg4)', margin: '0 1px' }}/>
+        <div style={{ width: pf+'%', background: '#4d9fff' }}/>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-        <span style={{ fontSize: 10, color: '#00e5a0', fontWeight: 600 }}>{pc}%</span>
-        <span style={{ fontSize: 10, color: 'var(--text3)' }}>Empate {pe}%</span>
-        <span style={{ fontSize: 10, color: '#4d9fff', fontWeight: 600 }}>{pf}%</span>
+      <div className="home-probbar-pcts">
+        <span className="home-probbar-pct" style={{ color: '#00e5a0' }}>{pc}%</span>
+        <span className="home-probbar-pct" style={{ color: 'var(--text3)', fontWeight: 400 }}>Emp {pe}%</span>
+        <span className="home-probbar-pct" style={{ color: '#4d9fff' }}>{pf}%</span>
       </div>
     </div>
   );
 }
+
+function calcScore(j) {
+  const vbs = (j.valueBets||[]).filter(v=>v.ev>0);
+  if (!vbs.length) return 0;
+  return Math.min(99, Math.round(40 + Math.max(...vbs.map(v=>v.ev||0))*2.5 + vbs.length*5));
+}
+function melhor(j) {
+  const vbs = (j.valueBets||[]).filter(v=>v.ev>0);
+  return vbs.length ? vbs.reduce((a,b)=>a.ev>b.ev?a:b) : null;
+}
+function nSug(j) { return (j.valueBets||[]).filter(v=>v.ev>0).length; }
 
 export default function Home({ onSelectJogo, jogos: jogosProp }) {
   const [filtro, setFiltro] = useState('todos');
-  const hoje = new Date().toLocaleDateString('pt-BR');
-  const amanhã = new Date(Date.now() + 86400000).toLocaleDateString('pt-BR');
+  const hoje  = new Date().toLocaleDateString('pt-BR');
+  const amnh  = new Date(Date.now()+86400000).toLocaleDateString('pt-BR');
 
-  const JOGOS = (jogosProp || []).filter(j => {
-    if (filtro === 'hoje') return j.data === hoje;
-    if (filtro === 'amanhã') return j.data === amanhã;
-    return true;
-  }).sort((a, b) => (calcScore(b) - calcScore(a)));
+  const JOGOS = (jogosProp||[])
+    .filter(j => filtro==='hoje' ? j.data===hoje : filtro==='amanhã' ? j.data===amnh : true)
+    .sort((a,b) => calcScore(b)-calcScore(a));
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto', padding: '36px 20px' }}>
+    <>
+      <style>{STYLES}</style>
+      <div className="home-wrap">
 
-      {/* Hero header */}
-      <div style={{ marginBottom: 40 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <span style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: '.14em',
-            textTransform: 'uppercase', color: 'var(--accent)',
-            background: 'rgba(0,229,160,.1)', border: '1px solid rgba(0,229,160,.2)',
-            padding: '3px 10px', borderRadius: 20,
-          }}>Copa do Mundo 2026</span>
-          <span style={{
-            fontSize: 11, fontWeight: 600, color: 'var(--text3)',
-            background: 'var(--bg3)', padding: '3px 10px', borderRadius: 20,
-          }}>{JOGOS.length} jogos disponíveis</span>
-        </div>
-        <h1 style={{
-          fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 800,
-          color: 'var(--text)', lineHeight: 1.15, marginBottom: 12,
-          letterSpacing: '-0.5px',
-        }}>
-          Análise inteligente<br />
-          <span style={{ color: 'var(--accent)' }}>de apostas</span>
-        </h1>
-        <p style={{ color: 'var(--text3)', fontSize: 14, lineHeight: 1.7, maxWidth: 480 }}>
-          Cada jogo é analisado automaticamente com base em estatísticas reais da Copa.
-          As melhores oportunidades são rankeadas por valor esperado (EV).
-        </p>
-      </div>
-
-      {/* Filtros */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 28 }}>
-        {[['todos', 'Todos os jogos'], ['hoje', 'Hoje'], ['amanhã', 'Amanhã']].map(([v, l]) => (
-          <button key={v} onClick={() => setFiltro(v)} style={{
-            padding: '7px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-            border: `1px solid ${filtro === v ? 'transparent' : 'var(--border)'}`,
-            cursor: 'pointer', transition: 'all .15s',
-            background: filtro === v ? 'var(--accent)' : 'var(--bg2)',
-            color: filtro === v ? '#000' : 'var(--text2)',
-          }}>{l}</button>
-        ))}
-      </div>
-
-      {/* Cards de jogos */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {JOGOS.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text3)', fontSize: 14 }}>
-            Nenhum jogo encontrado.
+        {/* Hero */}
+        <div className="home-hero">
+          <div className="home-badges">
+            <span className="home-badge home-badge-green">Copa do Mundo 2026</span>
+            <span className="home-badge home-badge-grey">{JOGOS.length} jogos</span>
           </div>
-        )}
-        {JOGOS.map((jogo, idx) => {
-          const score = calcScore(jogo);
-          const melhor = melhorSugestao(jogo);
-          const nSug = (jogo.valueBets || []).filter(v => v.ev > 0).length;
-          const statsCasa = getStats(jogo.casa.nome);
-          const statsFora = getStats(jogo.fora.nome);
-          const o = jogo.odds || {};
+          <h1 className="home-title" style={{ fontSize: 32 }}>
+            Análise inteligente<br/>
+            <span style={{ color: '#00e5a0' }}>de apostas</span>
+          </h1>
+          <p className="home-subtitle">
+            Cada jogo é analisado com estatísticas reais e as melhores oportunidades são
+            rankeadas por valor esperado (EV).
+          </p>
+        </div>
 
-          return (
-            <div
-              key={jogo.id}
-              onClick={() => onSelectJogo(jogo)}
-              style={{
-                background: 'var(--bg2)',
-                border: score > 0
-                  ? '1px solid rgba(0,229,160,.18)'
-                  : '1px solid var(--border)',
-                borderRadius: 18, cursor: 'pointer',
-                transition: 'all .2s', overflow: 'hidden',
-                position: 'relative',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = 'var(--bg3)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,.3)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'var(--bg2)';
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              {/* Linha de destaque topo */}
-              {score > 0 && (
-                <div style={{
-                  height: 2,
-                  background: `linear-gradient(90deg, var(--accent) 0%, transparent 100%)`,
-                }} />
-              )}
+        {/* Filtros */}
+        <div className="home-filters">
+          {[['todos','Todos'],['hoje','Hoje'],['amanhã','Amanhã']].map(([v,l])=>(
+            <button key={v} className={`home-filter${filtro===v?' active':''}`}
+              onClick={()=>setFiltro(v)}>{l}</button>
+          ))}
+        </div>
 
-              <div style={{ padding: '20px 24px' }}>
-                {/* Linha 1: meta info + score */}
-                <div style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  alignItems: 'center', marginBottom: 18,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500 }}>
-                      {jogo.data}
+        {/* Cards */}
+        <div className="home-cards">
+          {JOGOS.length === 0 && (
+            <div style={{ textAlign:'center', padding:'48px 0', color:'var(--text3)', fontSize:14 }}>
+              Nenhum jogo encontrado.
+            </div>
+          )}
+          {JOGOS.map(jogo => {
+            const sc = calcScore(jogo);
+            const mb = melhor(jogo);
+            const ns = nSug(jogo);
+            const o  = jogo.odds||{};
+            const stC = getStats(jogo.casa.nome);
+            const stF = getStats(jogo.fora.nome);
+            return (
+              <div key={jogo.id} className={`home-card${sc>0?' has-bets':''}`}
+                onClick={()=>onSelectJogo(jogo)}>
+                {sc > 0 && <div className="home-card-accent"/>}
+                <div className="home-card-body">
+                  {/* Meta */}
+                  <div className="home-card-meta">
+                    <span className="home-card-time">
+                      {jogo.data} · {jogo.hora}
+                      {jogo.estadio ? ` · ${jogo.estadio}` : ''}
                     </span>
-                    <span style={{ color: 'var(--border)', fontSize: 12 }}>·</span>
-                    <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500 }}>
-                      {jogo.hora}
-                    </span>
-                    {jogo.estadio && (
-                      <>
-                        <span style={{ color: 'var(--border)', fontSize: 12 }}>·</span>
-                        <span style={{ fontSize: 11, color: 'var(--text3)' }}>
-                          {jogo.estadio}
-                        </span>
-                      </>
-                    )}
+                    <ScoreRing score={sc||null}/>
                   </div>
-                  <ScoreRing score={score || null} />
-                </div>
 
-                {/* Linha 2: times com logos */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                  {/* Time da casa */}
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <FlagImg nome={jogo.casa.nome} size={48} />
-                    <div>
-                      <div style={{
-                        fontFamily: 'var(--font-display)', fontSize: 20,
-                        fontWeight: 800, color: 'var(--text)', lineHeight: 1.1,
-                      }}>{jogo.casa.nome}</div>
-                      {statsCasa && (
-                        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>
-                          {statsCasa.gols_marcados}G marcados · #{statsCasa.ranking_fifa} FIFA
-                        </div>
-                      )}
+                  {/* Times */}
+                  <div className="home-card-teams">
+                    {/* Casa */}
+                    <div className="home-team">
+                      <FlagImg nome={jogo.casa.nome}/>
+                      <div style={{ minWidth:0 }}>
+                        <div className="home-team-name" style={{ fontSize:17 }}>{jogo.casa.nome}</div>
+                        {stC && <div className="home-team-sub">{stC.gols_marcados}G · #{stC.ranking_fifa}</div>}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Centro: odds e placar */}
-                  <div style={{ textAlign: 'center', padding: '0 20px', flexShrink: 0 }}>
-                    {o.resultado?.casa ? (
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 17, fontWeight: 700, color: '#00e5a0' }}>
-                            {parseFloat(o.resultado.casa).toFixed(2)}
-                          </div>
-                          <div style={{ fontSize: 9, color: 'var(--text3)', marginTop: 1 }}>CASA</div>
-                        </div>
-                        {o.resultado.empate && (
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 17, fontWeight: 700, color: 'var(--text2)' }}>
-                              {parseFloat(o.resultado.empate).toFixed(2)}
+                    {/* Odds centro */}
+                    <div className="home-odds">
+                      {o.resultado?.casa ? (
+                        <div className="home-odds-row">
+                          {[
+                            { val: o.resultado.casa,   lbl:'1', cor:'#00e5a0' },
+                            { val: o.resultado.empate, lbl:'X', cor:'var(--text2)' },
+                            { val: o.resultado.fora,   lbl:'2', cor:'#4d9fff' },
+                          ].filter(x=>x.val).map(({val,lbl,cor})=>(
+                            <div key={lbl} className="home-odd-cell">
+                              <div className="home-odd-val" style={{ fontSize:15, color:cor }}>
+                                {parseFloat(val).toFixed(2)}
+                              </div>
+                              <div className="home-odd-lbl">{lbl}</div>
                             </div>
-                            <div style={{ fontSize: 9, color: 'var(--text3)', marginTop: 1 }}>EMP</div>
-                          </div>
-                        )}
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 17, fontWeight: 700, color: '#4d9fff' }}>
-                            {parseFloat(o.resultado.fora).toFixed(2)}
-                          </div>
-                          <div style={{ fontSize: 9, color: 'var(--text3)', marginTop: 1 }}>FORA</div>
+                          ))}
                         </div>
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 700, letterSpacing: '.15em' }}>VS</div>
-                    )}
-                  </div>
-
-                  {/* Time de fora */}
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'flex-end' }}>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{
-                        fontFamily: 'var(--font-display)', fontSize: 20,
-                        fontWeight: 800, color: 'var(--text)', lineHeight: 1.1,
-                      }}>{jogo.fora.nome}</div>
-                      {statsFora && (
-                        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>
-                          {statsFora.gols_marcados}G marcados · #{statsFora.ranking_fifa} FIFA
-                        </div>
+                      ) : (
+                        <span style={{ fontSize:11, color:'var(--text3)', fontWeight:700, letterSpacing:'.1em' }}>VS</span>
                       )}
                     </div>
-                    <FlagImg nome={jogo.fora.nome} size={48} />
+
+                    {/* Fora */}
+                    <div className="home-team home-team-right">
+                      <div style={{ minWidth:0 }}>
+                        <div className="home-team-name" style={{ fontSize:17 }}>{jogo.fora.nome}</div>
+                        {stF && <div className="home-team-sub" style={{ textAlign:'right' }}>{stF.gols_marcados}G · #{stF.ranking_fifa}</div>}
+                      </div>
+                      <FlagImg nome={jogo.fora.nome}/>
+                    </div>
                   </div>
+
+                  {/* Barra prob */}
+                  <ProbBar oddCasa={o.resultado?.casa} oddFora={o.resultado?.fora}
+                    oddEmp={o.resultado?.empate}/>
                 </div>
 
-                {/* Barra de probabilidade */}
-                {o.resultado?.casa && (
-                  <ProbBar
-                    casaNome={jogo.casa.nome} foraNome={jogo.fora.nome}
-                    oddCasa={o.resultado.casa} oddFora={o.resultado.fora}
-                    oddEmp={o.resultado.empate}
-                  />
-                )}
-
-                {/* Linha 3: sugestão + link */}
-                <div style={{
-                  marginTop: 16, paddingTop: 14,
-                  borderTop: '1px solid var(--border)',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                }}>
-                  <div style={{ flex: 1 }}>
-                    {melhor ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <div style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 6,
-                          padding: '4px 12px', borderRadius: 20,
-                          background: 'rgba(0,229,160,.08)',
-                          border: '1px solid rgba(0,229,160,.2)',
-                        }}>
-                          <span style={{ color: 'var(--accent)', fontSize: 11 }}>★</span>
-                          <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600 }}>
-                            {melhor.mercado}
-                          </span>
-                          <span style={{ fontSize: 11, color: 'rgba(0,229,160,.6)', fontFamily: 'var(--font-mono)' }}>
-                            +{melhor.ev?.toFixed(1)}% EV
-                          </span>
-                        </div>
-                        {nSug > 1 && (
-                          <span style={{ fontSize: 12, color: 'var(--text3)' }}>
-                            +{nSug - 1} sugestão{nSug > 2 ? 'ões' : ''}
-                          </span>
-                        )}
+                {/* Footer */}
+                <div className="home-card-footer">
+                  <div style={{ flex:1, minWidth:0 }}>
+                    {mb ? (
+                      <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                        <span className="home-bet-chip">
+                          ★ {mb.mercado}
+                        </span>
+                        <span className="home-bet-ev">+{mb.ev?.toFixed(1)}% EV</span>
+                        {ns > 1 && <span style={{ fontSize:11, color:'var(--text3)' }}>+{ns-1}</span>}
                       </div>
                     ) : (
-                      <span style={{ fontSize: 12, color: 'var(--text3)' }}>
-                        Sem valor estatístico detectado
-                      </span>
+                      <span className="home-no-bet">Sem valor detectado</span>
                     )}
                   </div>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 13, color: 'var(--accent)', fontWeight: 700,
-                    whiteSpace: 'nowrap', marginLeft: 16,
-                  }}>
-                    Ver análise
-                    <span style={{ fontSize: 16 }}>→</span>
-                  </div>
+                  <span className="home-see-more">Ver análise →</span>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      {/* Rodapé info */}
-      <div style={{
-        marginTop: 40, padding: '16px 20px',
-        background: 'var(--bg2)', borderRadius: 12,
-        border: '1px solid var(--border)',
-        display: 'flex', alignItems: 'center', gap: 12,
-        fontSize: 12, color: 'var(--text3)',
-      }}>
-        <span style={{ fontSize: 18 }}>⏱</span>
-        <span>Dados atualizados a cada 5 minutos via scraper automático. As sugestões são baseadas em modelo estatístico de valor esperado.</span>
+        {/* Footer */}
+        <div className="home-footer">
+          <span style={{ fontSize:18, flexShrink:0 }}>⏱</span>
+          <span>Dados atualizados a cada 5 min. Sugestões baseadas em modelo estatístico de valor esperado (EV).</span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
