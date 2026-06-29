@@ -41,7 +41,7 @@ const STYLES = `
   background: var(--bg4); display: flex; align-items: center; justify-content: center;
   font-weight: 700; color: var(--text3); font-size: 14px; flex-shrink: 0;
 }
-.home-team-name { font-family: var(--font-display); font-weight: 800; color: var(--text); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-team-name { font-family: var(--font-display); font-weight: 800; color: var(--text); line-height: 1.1; overflow: hidden; }
 .home-team-sub  { font-size: 10px; color: var(--text3); margin-top: 2px; white-space: nowrap; }
 .home-odds { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; padding: 0 8px; }
 .home-odds-row { display: flex; gap: 6px; }
@@ -292,3 +292,4 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
     </>
   );
 }
+
