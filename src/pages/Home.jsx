@@ -74,12 +74,17 @@ const STYLES = `
 @media (max-width: 600px) {
   .home-wrap { padding: 20px 12px 48px; }
   .home-title { font-size: 26px !important; }
-  .home-card-body { padding: 14px 14px; }
-  .home-team-name { font-size: 15px !important; }
-  .home-odd-val { font-size: 14px !important; }
-  .home-card-footer { padding: 10px 14px 12px; }
-  .home-bet-chip { max-width: 160px; font-size: 10px; }
-  .home-team-flag, .home-team-flag-placeholder { width: 34px; height: 34px; }
+  .home-card-body { padding: 12px 12px; }
+  .home-card-teams { flex-direction: column; gap: 0; }
+  .home-team { gap: 10px; padding: 6px 0; width: 100%; }
+  .home-team-right { flex-direction: row; justify-content: flex-end; padding-top: 0; }
+  .home-odds { flex-direction: row; justify-content: center; padding: 8px 0; width: 100%; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 2px 0; }
+  .home-odds-row { gap: 16px; }
+  .home-odd-val { font-size: 16px !important; }
+  .home-team-name { font-size: 16px !important; }
+  .home-card-footer { padding: 10px 12px 12px; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .home-see-more { align-self: flex-end; }
+  .home-team-flag, .home-team-flag-placeholder { width: 32px; height: 32px; border-radius: 6px; }
 }
 @media (max-width: 400px) {
   .home-odd-val { font-size: 12px !important; }
