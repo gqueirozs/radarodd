@@ -1,4 +1,5 @@
 import React from 'react';
+import Logo from './Logo';
 
 export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
   const s = {
@@ -17,7 +18,6 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
       <style>{`
         .nav { position:sticky; top:0; z-index:200; background:rgba(9,13,20,.96); backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,.07); padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; }
         .nav-logo { background:none; border:none; display:flex; align-items:center; gap:9px; cursor:pointer; padding:0; }
-        .nav-logo-icon { width:32px; height:32px; border-radius:9px; background:linear-gradient(135deg,#00e5a0,#00b0ff); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
         .nav-logo-text { font-family:var(--font-display); font-weight:800; font-size:17px; color:#f0f4ff; letter-spacing:-.3px; }
         .nav-logo-text span { color:#00e5a0; }
         .nav-logo-domain { font-size:9px; color:#4d5f7a; letter-spacing:.05em; margin-top:1px; }
@@ -31,7 +31,7 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
       `}</style>
       <nav className="nav">
         <button className="nav-logo" onClick={() => setPage('home')}>
-          <div className="nav-logo-icon">📡</div>
+          <Logo size={32} />
           <div>
             <div className="nav-logo-text">Sinal<span>Odds</span></div>
             <div className="nav-logo-domain">sinalodds.com.br</div>
