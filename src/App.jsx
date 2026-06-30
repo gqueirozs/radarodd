@@ -3,6 +3,7 @@ import Nav from './components/Nav';
 import Home from './pages/Home';
 import Analisador from './pages/Analisador';
 import Historico from './pages/Historico';
+import Chaveamento from './pages/Chaveamento';
 import { fetchJogos, fetchStatus } from './data/api';
 import { JOGOS as JOGOS_MOCK } from './data/mockData';
 
@@ -67,6 +68,7 @@ export default function App() {
         <Analisador jogo={jogoSelecionado} onVoltar={handleVoltar} />
       )}
       {page === 'historico' && <Historico />}
+      {page === 'chaveamento' && <Chaveamento jogos={jogos} onSelectJogo={handleSelectJogo} />}
     </div>
   );
 }
