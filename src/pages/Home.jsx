@@ -275,17 +275,26 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
         </div>
 
         {/* Times */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10, gap:8 }}>
-          <div style={{ display:'flex', alignItems:'center', gap: isMob?8:12, flex:1 }}>
-            <Flag nome={jogo.casa.nome} size={tamanhoFlag}/>
-            <div>
-              <div style={{ fontFamily:'var(--font-display)', fontSize: isMob?14:17, fontWeight:800, color:'#f0f4ff' }}>{jogo.casa.nome}</div>
-              {stC && !isMob && <div style={{ fontSize:10, color:'#9aabc7', marginTop:2 }}>{stC.gols_marcados}G · #{stC.ranking_fifa}</div>}
+        {(() => {
+          const blocoCasa = (
+            <div style={{ display:'flex', alignItems:'center', gap: isMob?8:12, flex:1, minWidth:0 }}>
+              <Flag nome={jogo.casa.nome} size={tamanhoFlag}/>
+              <div style={{ minWidth:0 }}>
+                <div style={{ fontFamily:'var(--font-display)', fontSize: isMob?14:17, fontWeight:800, color:'#f0f4ff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{jogo.casa.nome}</div>
+                {stC && !isMob && <div style={{ fontSize:10, color:'#9aabc7', marginTop:2 }}>{stC.gols_marcados}G · #{stC.ranking_fifa}</div>}
+              </div>
             </div>
-          </div>
-
-          {/* Placar real (encerrado ou ao vivo) */}
-          {(encerrado || aoVivo) && jogo.placar && (
+          );
+          const blocoFora = (
+            <div style={{ display:'flex', alignItems:'center', gap: isMob?8:12, flex:1, justifyContent:'flex-end', minWidth:0 }}>
+              <div style={{ textAlign:'right', minWidth:0 }}>
+                <div style={{ fontFamily:'var(--font-display)', fontSize: isMob?14:17, fontWeight:800, color:'#f0f4ff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{jogo.fora.nome}</div>
+                {stF && !isMob && <div style={{ fontSize:10, color:'#9aabc7', marginTop:2 }}>{stF.gols_marcados}G · #{stF.ranking_fifa}</div>}
+              </div>
+              <Flag nome={jogo.fora.nome} size={tamanhoFlag}/>
+            </div>
+          );
+          const blocoPlacar = (encerrado || aoVivo) && jogo.placar && (
             <div style={{ display:'flex', alignItems:'baseline', gap:8, flexShrink:0, padding:'0 4px' }}>
               <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?22:26, fontWeight:700, color: aoVivo ? '#ff4d6d' : '#f0f4ff' }}>
                 {jogo.placar.casa}
@@ -297,28 +306,44 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
                 {jogo.placar.penaltisFora != null && <span style={{ fontSize:12, color:'#c6d1e6' }}> ({jogo.placar.penaltisFora})</span>}
               </span>
             </div>
-          )}
-
-          {/* Odds (só pré-jogo) */}
-          {!encerrado && !aoVivo && o.resultado?.casa && (
-            <div style={{ display:'flex', gap: isMob?10:8, flexShrink:0, padding: isMob?'0':'0 4px' }}>
+          );
+          const blocoOdds = !encerrado && !aoVivo && o.resultado?.casa && (
+            <div style={{ display:'flex', gap: isMob?18:8, flexShrink:0, padding: isMob?'0':'0 4px' }}>
               {[{v:o.resultado.casa,l:'1',c:'#00e5a0'},{v:o.resultado.empate,l:'X',c:'#c6d1e6'},{v:o.resultado.fora,l:'2',c:'#4d9fff'}].filter(x=>x.v).map(({v,l,c})=>(
                 <div key={l} style={{ textAlign:'center' }}>
-                  <div style={{ fontFamily:'var(--font-mono)', fontSize: isMob?15:15, fontWeight:700, color:c }}>{parseFloat(v).toFixed(2)}</div>
+                  <div style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color:c }}>{parseFloat(v).toFixed(2)}</div>
                   <div style={{ fontSize:9, color:'#9aabc7', marginTop:2, textTransform:'uppercase', letterSpacing:'.05em' }}>{l}</div>
                 </div>
               ))}
             </div>
-          )}
+          );
 
-          <div style={{ display:'flex', alignItems:'center', gap: isMob?8:12, flex:1, justifyContent:'flex-end' }}>
-            <div style={{ textAlign:'right' }}>
-              <div style={{ fontFamily:'var(--font-display)', fontSize: isMob?14:17, fontWeight:800, color:'#f0f4ff' }}>{jogo.fora.nome}</div>
-              {stF && !isMob && <div style={{ fontSize:10, color:'#9aabc7', marginTop:2 }}>{stF.gols_marcados}G · #{stF.ranking_fifa}</div>}
+          // Mobile: times na primeira linha, odds/placar centralizados embaixo
+          // (numa linha só ficava tudo espremido e o nome do visitante cortava)
+          if (isMob) {
+            return (
+              <div style={{ marginBottom:10 }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10 }}>
+                  {blocoCasa}
+                  {blocoFora}
+                </div>
+                {(blocoPlacar || blocoOdds) && (
+                  <div style={{ display:'flex', justifyContent:'center', marginTop:10 }}>
+                    {blocoPlacar || blocoOdds}
+                  </div>
+                )}
+              </div>
+            );
+          }
+          return (
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10, gap:8 }}>
+              {blocoCasa}
+              {blocoPlacar}
+              {blocoOdds}
+              {blocoFora}
             </div>
-            <Flag nome={jogo.fora.nome} size={tamanhoFlag}/>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Barra prob */}
         <ProbBar oddC={o.resultado?.casa} oddF={o.resultado?.fora} oddE={o.resultado?.empate}/>

@@ -13,6 +13,19 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
     ? new Date(ultimaAtualizacao).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     : null;
 
+  const ICONES = {
+    home: (
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M13 2 4.5 13.5H11l-1 8.5L18.5 10.5H12L13 2z"/>
+      </svg>
+    ),
+    chaveamento: (
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/>
+        <path d="M7 6H4a1 1 0 0 0-1 1c0 2.2 1.8 4 4 4M17 6h3a1 1 0 0 1 1 1c0 2.2-1.8 4-4 4"/>
+      </svg>
+    ),
+  };
   const links = [['home','Jogos'],['chaveamento','Mata-mata']];
 
   return (
@@ -47,9 +60,9 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
             font-size:11px; font-weight:600; cursor:pointer; transition:all .15s;
           }
           .nav-bottom-link.on { color:#00e5a0; }
-          .nav-bottom-link:not(.on) { color:#c6d1e6; }
-          .nav-bottom-dot { width:5px; height:5px; border-radius:50%; background:#00e5a0; opacity:0; transition:opacity .15s; }
-          .nav-bottom-link.on .nav-bottom-dot { opacity:1; }
+          .nav-bottom-link:not(.on) { color:#9aabc7; }
+          .nav-bottom-icone { display:flex; align-items:center; justify-content:center; padding:3px 14px; border-radius:14px; transition:background .15s; }
+          .nav-bottom-link.on .nav-bottom-icone { background:rgba(0,229,160,.13); }
           body { padding-bottom:62px; }
         }
       `}</style>
@@ -64,7 +77,10 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
 
         <div className="nav-links">
           {links.map(([id,label])=>(
-            <button key={id} className={`nav-link${page===id?' on':''}`} onClick={()=>setPage(id)}>{label}</button>
+            <button key={id} className={`nav-link${page===id?' on':''}`} onClick={()=>setPage(id)}>
+              <span style={{ display:'inline-flex', verticalAlign:'-4px', marginRight:6 }}>{ICONES[id]}</span>
+              {label}
+            </button>
           ))}
         </div>
 
@@ -78,7 +94,7 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
       <div className="nav-bottom">
         {links.map(([id,label])=>(
           <button key={id} className={`nav-bottom-link${page===id?' on':''}`} onClick={()=>setPage(id)}>
-            <span className="nav-bottom-dot" />
+            <span className="nav-bottom-icone">{ICONES[id]}</span>
             {label}
           </button>
         ))}
