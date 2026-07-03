@@ -52,6 +52,17 @@ const S = `
 .hperfil-nome  { font-size: 12px; font-weight: 700; color: #f0f4ff; }
 .hperfil-desc  { font-size: 10px; color: #4d5f7a; margin-top: 2px; }
 
+/* Botão de jogos futuros (recolhidos por padrão) */
+.hfuturos {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 16px; margin-bottom: 20px;
+  background: #0f1520; border: 1px dashed rgba(255,255,255,.12); border-radius: 12px;
+  color: #8b9ab4; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all .15s;
+}
+.hfuturos:hover { border-color: rgba(0,229,160,.35); color: #00e5a0; background: rgba(0,229,160,.04); }
+.hfuturos-seta { font-size: 11px; }
+
 /* Timeline por dia */
 .hgrupo { margin-bottom: 24px; }
 .hgrupo:last-child { margin-bottom: 0; }
@@ -317,6 +328,7 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
 export default function Home({ onSelectJogo, jogos: jogosProp }) {
   const [filtro, setFiltro]   = useState('todos');
   const [perfil, setPerfil]   = useState('moderado');
+  const [mostrarFuturos, setMostrarFuturos] = useState(false);
   const isMob = useIsMobile(640);
   const hoje = new Date().toLocaleDateString('pt-BR');
   const amnh = new Date(Date.now()+86400000).toLocaleDateString('pt-BR');
@@ -379,16 +391,49 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
             Nenhum jogo encontrado.
           </div>
         )}
-        {agruparPorDia(JOGOS).map(grupo => (
-          <div className="hgrupo" key={grupo.key}>
-            <HeaderDia grupo={grupo}/>
-            <div className="hcards">
-              {grupo.jogos.map(j => (
-                <CardJogo key={j.id} jogo={j} perfil={perfil} isMob={isMob} onClick={()=>onSelectJogo(j)}/>
-              ))}
+        {(() => {
+          const grupos = agruparPorDia(JOGOS);
+
+          // No filtro "Todos", a análise começa em HOJE: dias futuros ficam
+          // recolhidos atrás de um botão, pra lista abrir direto no que importa.
+          const hoje0 = new Date(); hoje0.setHours(0,0,0,0);
+          const separar = filtro === 'todos';
+          const futuros = separar ? grupos.filter(g => g.dateObj && g.dateObj > hoje0) : [];
+          const atuais  = separar ? grupos.filter(g => !(g.dateObj && g.dateObj > hoje0)) : grupos;
+          const nFuturos = futuros.reduce((n, g) => n + g.jogos.length, 0);
+
+          const renderGrupo = g => (
+            <div className="hgrupo" key={g.key}>
+              <HeaderDia grupo={g}/>
+              <div className="hcards">
+                {g.jogos.map(j => (
+                  <CardJogo key={j.id} jogo={j} perfil={perfil} isMob={isMob} onClick={()=>onSelectJogo(j)}/>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+
+          return (
+            <>
+              {nFuturos > 0 && !mostrarFuturos && (
+                <button className="hfuturos" onClick={() => setMostrarFuturos(true)}>
+                  <span className="hfuturos-seta">▲</span>
+                  Mostrar {nFuturos} jogo{nFuturos > 1 ? 's' : ''} dos próximos dias
+                </button>
+              )}
+              {nFuturos > 0 && mostrarFuturos && (
+                <>
+                  <button className="hfuturos" onClick={() => setMostrarFuturos(false)}>
+                    <span className="hfuturos-seta">▼</span>
+                    Ocultar jogos dos próximos dias
+                  </button>
+                  {futuros.map(renderGrupo)}
+                </>
+              )}
+              {atuais.map(renderGrupo)}
+            </>
+          );
+        })()}
 
         {/* Footer info */}
         <div className="hbar-info">
