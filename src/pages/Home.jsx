@@ -52,6 +52,27 @@ const S = `
 .hperfil-nome  { font-size: 12px; font-weight: 700; color: #f0f4ff; }
 .hperfil-desc  { font-size: 10px; color: #4d5f7a; margin-top: 2px; }
 
+/* Timeline por dia */
+.hgrupo { margin-bottom: 24px; }
+.hgrupo:last-child { margin-bottom: 0; }
+.hdia {
+  position: sticky; top: 56px; z-index: 50;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 2px;
+  background: rgba(9,13,20,.92); backdrop-filter: blur(12px);
+  margin-bottom: 10px;
+}
+.hdia-num { font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: #f0f4ff; line-height: 1; letter-spacing: -1px; }
+.hdia-col { display: flex; flex-direction: column; gap: 1px; }
+.hdia-sem { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8b9ab4; }
+.hdia-mes { font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: #4d5f7a; }
+.hdia-tag { font-size: 10px; font-weight: 800; letter-spacing: .1em; padding: 3px 9px; border-radius: 20px; }
+.hdia-tag.hoje   { color: #00e5a0; background: rgba(0,229,160,.1);  border: 1px solid rgba(0,229,160,.25); }
+.hdia-tag.amanha { color: #4d9fff; background: rgba(77,159,255,.1); border: 1px solid rgba(77,159,255,.25); }
+.hdia-linha { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,.1), transparent); }
+.hdia-qtd { font-size: 11px; color: #4d5f7a; font-weight: 600; white-space: nowrap; }
+.htime-hora { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #c3cfe6; }
+
 /* Cards */
 .hcards { display: flex; flex-direction: column; gap: 10px; }
 .hcard  { background: #0f1520; border-radius: 16px; cursor: pointer; transition: background .2s, transform .2s, box-shadow .2s; overflow: hidden; border: 1px solid rgba(255,255,255,.07); }
@@ -80,6 +101,8 @@ const S = `
 
 @media (max-width: 640px) {
   .hw { padding: 20px 12px 48px; }
+  .hdia-num { font-size: 22px; }
+  .hdia { gap: 10px; }
   .hperfis { gap: 6px; }
   .hperfil { padding: 9px 10px; min-width: 80px; }
   .hbody { padding: 12px 12px; }
@@ -118,6 +141,58 @@ function ProbBar({ oddC, oddF, oddE }) {
   );
 }
 
+/* ─── Timeline: agrupamento por dia ───────────────────────────── */
+const DIAS_SEMANA = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+const MESES = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+
+function parseDataBR(d) {
+  const m = (d || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+}
+
+function tagRelativa(dateObj) {
+  if (!dateObj) return null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const diff = Math.round((dateObj - hoje) / 86400000);
+  if (diff === 0) return { texto: 'HOJE',   cls: 'hoje'   };
+  if (diff === 1) return { texto: 'AMANHÃ', cls: 'amanha' };
+  return null;
+}
+
+function agruparPorDia(jogos) {
+  const grupos = [];
+  const idx = new Map();
+  for (const j of jogos) {
+    const key = j.data || 'sem-data';
+    if (!idx.has(key)) {
+      const g = { key, dateObj: parseDataBR(j.data), jogos: [] };
+      idx.set(key, g); grupos.push(g);
+    }
+    idx.get(key).jogos.push(j);
+  }
+  // Mais recente primeiro; sem data por último
+  grupos.sort((a, b) => (b.dateObj?.getTime() ?? -Infinity) - (a.dateObj?.getTime() ?? -Infinity));
+  return grupos;
+}
+
+function HeaderDia({ grupo }) {
+  const d = grupo.dateObj;
+  const tag = tagRelativa(d);
+  const n = grupo.jogos.length;
+  return (
+    <div className="hdia">
+      <span className="hdia-num">{d ? String(d.getDate()).padStart(2,'0') : '—'}</span>
+      <div className="hdia-col">
+        <span className="hdia-sem">{d ? DIAS_SEMANA[d.getDay()] : 'DATA'}</span>
+        <span className="hdia-mes">{d ? MESES[d.getMonth()] : 'A CONFIRMAR'}</span>
+      </div>
+      {tag && <span className={`hdia-tag ${tag.cls}`}>{tag.texto}</span>}
+      <div className="hdia-linha"/>
+      <span className="hdia-qtd">{n} jogo{n > 1 ? 's' : ''}</span>
+    </div>
+  );
+}
+
 function nivelSinal(ev, odd) {
   // Classifica o sinal para o apostador entender
   if (ev >= 12) return { cor: '#00e5a0', bg: 'rgba(0,229,160,.08)', bd: 'rgba(0,229,160,.22)', icon: '🎯', label: 'Excelente' };
@@ -151,7 +226,10 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
       <div className="hbody">
         {/* Meta */}
         <div className="hmeta">
-          <span className="htime">{jogo.data} · {jogo.hora}{jogo.estadio ? ` · ${jogo.estadio}` : ''}</span>
+          <span className="htime">
+            <span className="htime-hora">{jogo.hora}</span>
+            {jogo.estadio ? ` · ${jogo.estadio}` : ''}
+          </span>
           {temSinais && (
             <span style={{ fontSize:10, color:'#00e5a0', fontWeight:700, background:'rgba(0,229,160,.1)', border:'1px solid rgba(0,229,160,.2)', padding:'2px 8px', borderRadius:20 }}>
               {sinaisExibidos.length} sinal{sinaisExibidos.length>1?'is':''}
@@ -295,17 +373,22 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
           </div>
         </div>
 
-        {/* Cards */}
-        <div className="hcards">
-          {JOGOS.length===0 && (
-            <div style={{ textAlign:'center', padding:'48px 0', color:'#4d5f7a', fontSize:14 }}>
-              Nenhum jogo encontrado.
+        {/* Timeline agrupada por dia */}
+        {JOGOS.length===0 && (
+          <div style={{ textAlign:'center', padding:'48px 0', color:'#4d5f7a', fontSize:14 }}>
+            Nenhum jogo encontrado.
+          </div>
+        )}
+        {agruparPorDia(JOGOS).map(grupo => (
+          <div className="hgrupo" key={grupo.key}>
+            <HeaderDia grupo={grupo}/>
+            <div className="hcards">
+              {grupo.jogos.map(j => (
+                <CardJogo key={j.id} jogo={j} perfil={perfil} isMob={isMob} onClick={()=>onSelectJogo(j)}/>
+              ))}
             </div>
-          )}
-          {JOGOS.map(j => (
-            <CardJogo key={j.id} jogo={j} perfil={perfil} isMob={isMob} onClick={()=>onSelectJogo(j)}/>
-          ))}
-        </div>
+          </div>
+        ))}
 
         {/* Footer info */}
         <div className="hbar-info">
