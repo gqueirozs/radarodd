@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Nav from './components/Nav';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import Analisador from './pages/Analisador';
 import Chaveamento from './pages/Chaveamento';
@@ -67,6 +68,7 @@ export default function App() {
         <Analisador jogo={jogoSelecionado} onVoltar={handleVoltar} />
       )}
       {page === 'chaveamento' && <Chaveamento jogos={jogos} onSelectJogo={handleSelectJogo} />}
+      <Footer />
     </div>
   );
 }
