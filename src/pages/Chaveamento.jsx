@@ -162,7 +162,7 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
     carregar();
     const timer = setInterval(carregar, 90 * 1000); // acompanha placar ao vivo
     return () => { ativo = false; clearInterval(timer); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleClick = j => { if (onSelectJogo) onSelectJogo(j); };
   const fases = dados?.fases || {};
