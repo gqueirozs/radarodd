@@ -44,3 +44,15 @@ export async function fetchValueBets() {
     return [];
   }
 }
+
+export async function fetchConfronto(casa, fora) {
+  try {
+    const qs = new URLSearchParams({ casa, fora }).toString();
+    const res = await fetch(`${API_URL}/api/confronto?${qs}`);
+    const data = await res.json();
+    return data.ok ? data : null;
+  } catch (err) {
+    console.warn('Erro ao buscar confronto:', err.message);
+    return null;
+  }
+}

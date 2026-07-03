@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { getLogo, getStats, getH2H } from '../data/statsDB';
+import { fetchConfronto } from '../data/api';
 
 const STYLES = `
 .ana-wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 48px; }
@@ -168,9 +169,101 @@ function MktRow({ label, sub, odd, ev }) {
   );
 }
 
+/* ─── Estatísticas reais (ESPN) ─────────────────────────────────── */
+function fmtDataISO(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+
+const COR_RES = { V: '#00e5a0', E: '#8b9ab4', D: '#ff4d6d' };
+const TXT_RES = { V: 'VITÓRIA', E: 'EMPATE', D: 'DERROTA' };
+
+function golsDoTime(det, espnId) {
+  if (!det?.gols) return [];
+  return det.gols.filter(g => g.timeId === String(espnId) && g.jogador);
+}
+
+function LinhaJogoReal({ j, espnId }) {
+  const cor = COR_RES[j.resultado];
+  const gols = golsDoTime(j.detalhes, espnId);
+  const amarelos  = (j.detalhes?.cartoes || []).filter(c => c.tipo === 'amarelo').length;
+  const vermelhos = (j.detalhes?.cartoes || []).filter(c => c.tipo === 'vermelho').length;
+  return (
+    <div style={{ background:'var(--bg2, #0f1520)', border:`1px solid ${cor}22`, borderLeft:`3px solid ${cor}`, borderRadius:10, padding:'9px 12px', marginBottom:6 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+        <span style={{ fontSize:12, fontWeight:700, color:'var(--text, #f0f4ff)', flex:1, minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+          vs {j.adversario} <span style={{ color:'var(--text3, #4d5f7a)', fontWeight:500, fontSize:11 }}>{fmtDataISO(j.data)}</span>
+        </span>
+        <span style={{ fontFamily:'var(--font-mono)', fontWeight:700, fontSize:13, color:'var(--text, #f0f4ff)' }}>{j.golsPro}-{j.golsContra}</span>
+        <span style={{ fontSize:10, fontWeight:800, letterSpacing:'.06em', color:cor, minWidth:56, textAlign:'right' }}>{TXT_RES[j.resultado]}</span>
+      </div>
+      {(gols.length > 0 || amarelos > 0 || vermelhos > 0) && (
+        <div style={{ marginTop:5, fontSize:11, color:'var(--text3, #4d5f7a)', lineHeight:1.5 }}>
+          {gols.length > 0 && <>⚽ {gols.map(g => `${g.jogador}${g.minuto ? ` ${g.minuto}` : ''}`).join(' · ')}</>}
+          {(amarelos > 0 || vermelhos > 0) && (
+            <span style={{ marginLeft: gols.length > 0 ? 8 : 0 }}>
+              {amarelos > 0 && <span style={{ color:'#ffb830' }}>🟨 {amarelos}</span>}
+              {vermelhos > 0 && <span style={{ color:'#ff4d6d', marginLeft:6 }}>🟥 {vermelhos}</span>}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LinhaH2H({ j, nomeCasa, confrontoData }) {
+  const idCasa = confrontoData?.casa?.espnId;
+  const idFora = confrontoData?.fora?.espnId;
+  const golsCasa = golsDoTime(j.detalhes, idCasa);
+  const golsFora = golsDoTime(j.detalhes, idFora);
+  const fC = j.detalhes?.faltas?.[idCasa];
+  const fF = j.detalhes?.faltas?.[idFora];
+  return (
+    <div style={{ background:'rgba(255,255,255,.02)', border:'1px solid rgba(255,255,255,.07)', borderRadius:10, padding:'10px 12px', marginBottom:6 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+        <span style={{ fontSize:11, color:'var(--text3, #4d5f7a)', minWidth:56 }}>{fmtDataISO(j.data)}</span>
+        <span style={{ fontSize:12, fontWeight:700, color:'var(--text, #f0f4ff)', flex:1 }}>
+          {nomeCasa} <span style={{ fontFamily:'var(--font-mono)', color: COR_RES[j.resultado] }}>{j.golsPro} x {j.golsContra}</span> {j.adversario}
+        </span>
+        <span style={{ fontSize:10, color:'var(--text3, #4d5f7a)', textTransform:'capitalize' }}>{(j.competicao || '').replace(/-/g,' ')}</span>
+      </div>
+      {(golsCasa.length > 0 || golsFora.length > 0) && (
+        <div style={{ marginTop:6, display:'flex', gap:12, fontSize:11, lineHeight:1.5 }}>
+          <span style={{ flex:1, color:'#00e5a0' }}>{golsCasa.map(g => `${g.jogador} ${g.minuto||''}`.trim()).join(' · ')}</span>
+          <span style={{ flex:1, color:'#4d9fff', textAlign:'right' }}>{golsFora.map(g => `${g.jogador} ${g.minuto||''}`.trim()).join(' · ')}</span>
+        </div>
+      )}
+      {(fC || fF) && (
+        <div style={{ marginTop:6, fontSize:10, color:'var(--text3, #4d5f7a)' }}>
+          {fC?.faltas != null && fF?.faltas != null && <>Faltas {fC.faltas} x {fF.faltas}</>}
+          {fC?.escanteios != null && fF?.escanteios != null && <> · Escanteios {fC.escanteios} x {fF.escanteios}</>}
+          {fC?.posse != null && fF?.posse != null && <> · Posse {fC.posse} x {fF.posse}</>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Analisador({ jogo, onVoltar }) {
   const [aba, setAba] = useState('sugestoes');
+  const [conf, setConf] = useState(null);         // dados reais (ESPN)
+  const [confStatus, setConfStatus] = useState('carregando'); // carregando | ok | erro
   const isMob = useIsMobile(640);
+
+  useEffect(() => {
+    let ativo = true;
+    if (!jogo) return;
+    setConfStatus('carregando');
+    fetchConfronto(jogo.casa.nome, jogo.fora.nome).then(d => {
+      if (!ativo) return;
+      if (d && (d.casa || d.fora)) { setConf(d); setConfStatus('ok'); }
+      else setConfStatus('erro');
+    });
+    return () => { ativo = false; };
+  }, [jogo?.id]);
+
   if (!jogo) return null;
 
   const o    = jogo.odds || {};
@@ -314,6 +407,63 @@ export default function Analisador({ jogo, onVoltar }) {
         {/* ── ESTATÍSTICAS ── */}
         {aba==='estatisticas' && (
           <div>
+            {/* Dados reais — ESPN */}
+            {confStatus === 'carregando' && (
+              <div style={{ textAlign:'center', padding:'28px 0', color:'var(--text3, #4d5f7a)', fontSize:13 }}>
+                Buscando resultados reais das seleções…
+              </div>
+            )}
+
+            {confStatus === 'ok' && conf && (
+              <>
+                {/* Confronto direto */}
+                {conf.h2h?.length > 0 && (
+                  <>
+                    <div className="ana-divider">Confronto direto — {jogo.casa.nome} x {jogo.fora.nome}</div>
+                    <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+                      {[
+                        { v: conf.resumoH2H.vitoriasCasa, l: jogo.casa.nome, c: '#00e5a0' },
+                        { v: conf.resumoH2H.empates,      l: 'Empates',      c: '#8b9ab4' },
+                        { v: conf.resumoH2H.vitoriasFora, l: jogo.fora.nome, c: '#4d9fff' },
+                      ].map(({v,l,c}) => (
+                        <div key={l} style={{ flex:1, textAlign:'center', background:'var(--bg2, #0f1520)', border:'1px solid rgba(255,255,255,.07)', borderRadius:12, padding:'12px 8px' }}>
+                          <div style={{ fontFamily:'var(--font-mono)', fontSize:22, fontWeight:700, color:c }}>{v}</div>
+                          <div style={{ fontSize:10, color:'var(--text3, #4d5f7a)', marginTop:2 }}>{l}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginBottom:24 }}>
+                      {conf.h2h.map(j => <LinhaH2H key={j.eventoId} j={j} nomeCasa={jogo.casa.nome} confrontoData={conf}/>)}
+                    </div>
+                  </>
+                )}
+
+                {/* Últimos jogos reais */}
+                {(conf.casa?.ultimos?.length > 0 || conf.fora?.ultimos?.length > 0) && (
+                  <>
+                    <div className="ana-divider">Últimos jogos — resultados reais</div>
+                    <div className="ana-stats-grid" style={{ marginBottom:24, gridTemplateColumns: isMob ? '1fr' : '1fr 1fr' }}>
+                      {[[jogo.casa.nome, conf.casa], [jogo.fora.nome, conf.fora]].map(([nome, t]) => t?.ultimos?.length > 0 && (
+                        <div key={nome}>
+                          <div style={{ fontSize:12, fontWeight:700, color:'var(--text2, #8b9ab4)', marginBottom:10 }}>{nome}</div>
+                          {t.ultimos.map(j => <LinhaJogoReal key={j.eventoId} j={j} espnId={t.espnId}/>)}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                <div style={{ fontSize:10, color:'var(--text3, #4d5f7a)', textAlign:'right', marginTop:-14, marginBottom:20 }}>
+                  Fonte: ESPN · atualizado a cada 6h
+                </div>
+              </>
+            )}
+
+            {confStatus === 'erro' && (
+              <div style={{ padding:'12px 14px', background:'rgba(255,184,48,.06)', border:'1px solid rgba(255,184,48,.2)', borderRadius:10, fontSize:12, color:'var(--text2, #8b9ab4)', marginBottom:20 }}>
+                Não foi possível carregar os resultados reais agora — mostrando dados de referência.
+              </div>
+            )}
+
             {(stC||stF) && (
               <>
                 <div className="ana-divider">Fase de grupos — Copa 2026</div>
@@ -350,8 +500,8 @@ export default function Analisador({ jogo, onVoltar }) {
               </>
             )}
 
-            {/* Forma */}
-            {(stC?.forma_copa||stF?.forma_copa) && (
+            {/* Forma (referência local — só quando os dados reais falham) */}
+            {confStatus !== 'ok' && (stC?.forma_copa||stF?.forma_copa) && (
               <>
                 <div className="ana-divider">Últimos jogos na Copa</div>
                 <div className="ana-stats-grid" style={{ marginBottom:24, gridTemplateColumns: isMob ? '1fr' : '1fr 1fr' }}>
@@ -365,8 +515,8 @@ export default function Analisador({ jogo, onVoltar }) {
               </>
             )}
 
-            {/* H2H */}
-            {h2h && (
+            {/* H2H (referência local — só quando os dados reais falham) */}
+            {confStatus !== 'ok' && h2h && (
               <>
                 <div className="ana-divider">Histórico de confrontos diretos</div>
                 <div className="ana-h2h-box" style={{ marginBottom:24 }}>
