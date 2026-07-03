@@ -52,6 +52,9 @@ const S = `
 .hperfil-nome  { font-size: 12px; font-weight: 700; color: #f0f4ff; }
 .hperfil-desc  { font-size: 10px; color: #4d5f7a; margin-top: 2px; }
 
+@keyframes hpulse { 0%,100%{ opacity:1 } 50%{ opacity:.55 } }
+.hlive { animation: hpulse 1.6s infinite; }
+
 /* Botão de jogos futuros (recolhidos por padrão) */
 .hfuturos {
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -224,8 +227,11 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
   const stC = getStats(jogo.casa.nome);
   const stF = getStats(jogo.fora.nome);
 
-  // Filtrar sinais pelo perfil
-  const todosVbs  = (jogo.valueBets || []).filter(v => v.ev > 0).sort((a,b)=>b.ev-a.ev);
+  const encerrado = jogo.statusReal === 'encerrado';
+  const aoVivo    = jogo.statusReal === 'ao-vivo';
+
+  // Filtrar sinais pelo perfil (jogo encerrado não tem sinal a exibir)
+  const todosVbs  = encerrado ? [] : (jogo.valueBets || []).filter(v => v.ev > 0).sort((a,b)=>b.ev-a.ev);
   const sinaisFiltrados = filtraParaPerfil(todosVbs, perfil);
   const sinaisExibidos  = sinaisFiltrados.slice(0, isMob ? 2 : 3);
   const temSinais = sinaisExibidos.length > 0;
@@ -241,7 +247,17 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
             <span className="htime-hora">{jogo.hora}</span>
             {jogo.estadio ? ` · ${jogo.estadio}` : ''}
           </span>
-          {temSinais && (
+          {encerrado && (
+            <span style={{ fontSize:10, color:'#8b9ab4', fontWeight:800, letterSpacing:'.08em', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', padding:'2px 8px', borderRadius:20 }}>
+              ENCERRADO{jogo.prorrogacao ? ' · PRORR.' : ''}{jogo.placar?.penaltisCasa != null ? ' · PÊN.' : ''}
+            </span>
+          )}
+          {aoVivo && (
+            <span className="hlive" style={{ fontSize:10, color:'#ff4d6d', fontWeight:800, letterSpacing:'.08em', background:'rgba(255,77,109,.1)', border:'1px solid rgba(255,77,109,.25)', padding:'2px 8px', borderRadius:20 }}>
+              ● AO VIVO{jogo.relogio ? ` ${jogo.relogio}` : ''}
+            </span>
+          )}
+          {!encerrado && !aoVivo && temSinais && (
             <span style={{ fontSize:10, color:'#00e5a0', fontWeight:700, background:'rgba(0,229,160,.1)', border:'1px solid rgba(0,229,160,.2)', padding:'2px 8px', borderRadius:20 }}>
               {sinaisExibidos.length} sinal{sinaisExibidos.length>1?'is':''}
             </span>
@@ -258,8 +274,23 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
             </div>
           </div>
 
-          {/* Odds */}
-          {o.resultado?.casa && (
+          {/* Placar real (encerrado ou ao vivo) */}
+          {(encerrado || aoVivo) && jogo.placar && (
+            <div style={{ display:'flex', alignItems:'baseline', gap:8, flexShrink:0, padding:'0 4px' }}>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?22:26, fontWeight:700, color: aoVivo ? '#ff4d6d' : '#f0f4ff' }}>
+                {jogo.placar.casa}
+                {jogo.placar.penaltisCasa != null && <span style={{ fontSize:12, color:'#8b9ab4' }}> ({jogo.placar.penaltisCasa})</span>}
+              </span>
+              <span style={{ fontSize:13, color:'#4d5f7a', fontWeight:700 }}>x</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?22:26, fontWeight:700, color: aoVivo ? '#ff4d6d' : '#f0f4ff' }}>
+                {jogo.placar.fora}
+                {jogo.placar.penaltisFora != null && <span style={{ fontSize:12, color:'#8b9ab4' }}> ({jogo.placar.penaltisFora})</span>}
+              </span>
+            </div>
+          )}
+
+          {/* Odds (só pré-jogo) */}
+          {!encerrado && !aoVivo && o.resultado?.casa && (
             <div style={{ display:'flex', gap: isMob?10:8, flexShrink:0, padding: isMob?'0':'0 4px' }}>
               {[{v:o.resultado.casa,l:'1',c:'#00e5a0'},{v:o.resultado.empate,l:'X',c:'#8b9ab4'},{v:o.resultado.fora,l:'2',c:'#4d9fff'}].filter(x=>x.v).map(({v,l,c})=>(
                 <div key={l} style={{ textAlign:'center' }}>
