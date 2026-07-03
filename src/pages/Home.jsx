@@ -28,13 +28,13 @@ const S = `
 .hbadges { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .hbadge  { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
 .hbadge-g { color: #00e5a0; background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.2); }
-.hbadge-d { color: #7d8fad; background: #141c2a; border: 1px solid rgba(255,255,255,.07); }
+.hbadge-d { color: #9aabc7; background: #141c2a; border: 1px solid rgba(255,255,255,.07); }
 .htitle { font-family: var(--font-display); font-weight: 800; color: #f0f4ff; line-height: 1.15; letter-spacing: -.5px; margin-bottom: 10px; }
-.hsub   { color: #7d8fad; font-size: 13px; line-height: 1.6; max-width: 480px; }
+.hsub   { color: #9aabc7; font-size: 13px; line-height: 1.6; max-width: 480px; }
 
 /* Filtros de data */
 .hfilters { display: flex; gap: 6px; margin-bottom: 0; flex-wrap: wrap; }
-.hfilter  { padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.07); cursor: pointer; transition: all .15s; background: #0f1520; color: #aab7cf; }
+.hfilter  { padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.07); cursor: pointer; transition: all .15s; background: #0f1520; color: #c6d1e6; }
 .hfilter.on { background: #00e5a0; color: #000; border-color: transparent; }
 
 /* Perfis */
@@ -50,7 +50,7 @@ const S = `
 }
 .hperfil-emoji { font-size: 18px; margin-bottom: 4px; }
 .hperfil-nome  { font-size: 12px; font-weight: 700; color: #f0f4ff; }
-.hperfil-desc  { font-size: 10px; color: #7d8fad; margin-top: 2px; }
+.hperfil-desc  { font-size: 10px; color: #9aabc7; margin-top: 2px; }
 
 @keyframes hpulse { 0%,100%{ opacity:1 } 50%{ opacity:.55 } }
 .hlive { animation: hpulse 1.6s infinite; }
@@ -60,7 +60,7 @@ const S = `
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
   padding: 12px 16px; margin-bottom: 20px;
   background: #0f1520; border: 1px dashed rgba(255,255,255,.12); border-radius: 12px;
-  color: #aab7cf; font-size: 13px; font-weight: 600; cursor: pointer;
+  color: #c6d1e6; font-size: 13px; font-weight: 600; cursor: pointer;
   transition: all .15s;
 }
 .hfuturos:hover { border-color: rgba(0,229,160,.35); color: #00e5a0; background: rgba(0,229,160,.04); }
@@ -78,13 +78,13 @@ const S = `
 }
 .hdia-num { font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: #f0f4ff; line-height: 1; letter-spacing: -1px; }
 .hdia-col { display: flex; flex-direction: column; gap: 1px; }
-.hdia-sem { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #aab7cf; }
-.hdia-mes { font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: #7d8fad; }
+.hdia-sem { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #c6d1e6; }
+.hdia-mes { font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: #9aabc7; }
 .hdia-tag { font-size: 10px; font-weight: 800; letter-spacing: .1em; padding: 3px 9px; border-radius: 20px; }
 .hdia-tag.hoje   { color: #00e5a0; background: rgba(0,229,160,.1);  border: 1px solid rgba(0,229,160,.25); }
 .hdia-tag.amanha { color: #4d9fff; background: rgba(77,159,255,.1); border: 1px solid rgba(77,159,255,.25); }
 .hdia-linha { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,.1), transparent); }
-.hdia-qtd { font-size: 11px; color: #7d8fad; font-weight: 600; white-space: nowrap; }
+.hdia-qtd { font-size: 11px; color: #9aabc7; font-weight: 600; white-space: nowrap; }
 .htime-hora { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #c3cfe6; }
 
 /* Cards */
@@ -95,7 +95,7 @@ const S = `
 .haccent { height: 2px; background: linear-gradient(90deg,#00e5a0,transparent); }
 .hbody  { padding: 14px 16px; }
 .hmeta  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
-.htime  { font-size: 11px; color: #7d8fad; font-weight: 500; }
+.htime  { font-size: 11px; color: #9aabc7; font-weight: 500; }
 
 /* Sinais */
 .hsinais { display: flex; flex-direction: column; gap: 6px; }
@@ -103,15 +103,15 @@ const S = `
 .hsinal-icon  { font-size: 14px; flex-shrink: 0; }
 .hsinal-info  { flex: 1; min-width: 0; }
 .hsinal-nome  { font-size: 13px; font-weight: 600; color: #f0f4ff; }
-.hsinal-prob  { font-size: 11px; color: #aab7cf; margin-top: 1px; }
+.hsinal-prob  { font-size: 11px; color: #c6d1e6; margin-top: 1px; }
 .hsinal-right { text-align: right; flex-shrink: 0; }
 .hsinal-odd   { font-family: var(--font-mono); font-size: 17px; font-weight: 700; }
 .hsinal-ev    { font-size: 10px; font-weight: 700; margin-top: 1px; }
 
 .hfooter-card { padding: 10px 16px 13px; border-top: 1px solid rgba(255,255,255,.07); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .hsee { font-size: 12px; color: #00e5a0; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
-.hnobet { font-size: 12px; color: #7d8fad; }
-.hbar-info { margin-top: 28px; padding: 13px 16px; background: #0f1520; border-radius: 12px; border: 1px solid rgba(255,255,255,.07); display: flex; align-items: flex-start; gap: 10px; font-size: 12px; color: #7d8fad; line-height: 1.6; }
+.hnobet { font-size: 12px; color: #9aabc7; }
+.hbar-info { margin-top: 28px; padding: 13px 16px; background: #0f1520; border-radius: 12px; border: 1px solid rgba(255,255,255,.07); display: flex; align-items: flex-start; gap: 10px; font-size: 12px; color: #9aabc7; line-height: 1.6; }
 
 @media (max-width: 640px) {
   .hw { padding: 20px 12px 48px; }
@@ -128,7 +128,7 @@ function Flag({ nome, size }) {
   const logo = getLogo(nome);
   const st = { width: size, height: size, borderRadius: 7, objectFit: 'cover', border: '2px solid rgba(255,255,255,.1)', flexShrink: 0 };
   if (!logo) return (
-    <div style={{ ...st, background: '#1c2537', border: '2px solid rgba(255,255,255,.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#7d8fad', fontSize: size * .4 }}>
+    <div style={{ ...st, background: '#1c2537', border: '2px solid rgba(255,255,255,.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#9aabc7', fontSize: size * .4 }}>
       {nome?.charAt(0) || '?'}
     </div>
   );
@@ -148,7 +148,7 @@ function ProbBar({ oddC, oddF, oddE }) {
       </div>
       <div style={{ display:'flex', justifyContent:'space-between', marginTop: 4 }}>
         <span style={{ fontSize:10, color:'#00e5a0', fontWeight:600 }}>{pc}%</span>
-        <span style={{ fontSize:10, color:'#7d8fad' }}>Emp {pe}%</span>
+        <span style={{ fontSize:10, color:'#9aabc7' }}>Emp {pe}%</span>
         <span style={{ fontSize:10, color:'#4d9fff', fontWeight:600 }}>{pf}%</span>
       </div>
     </div>
@@ -248,7 +248,7 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
             {jogo.estadio ? ` · ${jogo.estadio}` : ''}
           </span>
           {encerrado && (
-            <span style={{ fontSize:10, color:'#aab7cf', fontWeight:800, letterSpacing:'.08em', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', padding:'2px 8px', borderRadius:20 }}>
+            <span style={{ fontSize:10, color:'#c6d1e6', fontWeight:800, letterSpacing:'.08em', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', padding:'2px 8px', borderRadius:20 }}>
               ENCERRADO{jogo.prorrogacao ? ' · PRORR.' : ''}{jogo.placar?.penaltisCasa != null ? ' · PÊN.' : ''}
             </span>
           )}
@@ -270,7 +270,7 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
             <Flag nome={jogo.casa.nome} size={tamanhoFlag}/>
             <div>
               <div style={{ fontFamily:'var(--font-display)', fontSize: isMob?14:17, fontWeight:800, color:'#f0f4ff' }}>{jogo.casa.nome}</div>
-              {stC && !isMob && <div style={{ fontSize:10, color:'#7d8fad', marginTop:2 }}>{stC.gols_marcados}G · #{stC.ranking_fifa}</div>}
+              {stC && !isMob && <div style={{ fontSize:10, color:'#9aabc7', marginTop:2 }}>{stC.gols_marcados}G · #{stC.ranking_fifa}</div>}
             </div>
           </div>
 
@@ -279,12 +279,12 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
             <div style={{ display:'flex', alignItems:'baseline', gap:8, flexShrink:0, padding:'0 4px' }}>
               <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?22:26, fontWeight:700, color: aoVivo ? '#ff4d6d' : '#f0f4ff' }}>
                 {jogo.placar.casa}
-                {jogo.placar.penaltisCasa != null && <span style={{ fontSize:12, color:'#aab7cf' }}> ({jogo.placar.penaltisCasa})</span>}
+                {jogo.placar.penaltisCasa != null && <span style={{ fontSize:12, color:'#c6d1e6' }}> ({jogo.placar.penaltisCasa})</span>}
               </span>
-              <span style={{ fontSize:13, color:'#7d8fad', fontWeight:700 }}>x</span>
+              <span style={{ fontSize:13, color:'#9aabc7', fontWeight:700 }}>x</span>
               <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?22:26, fontWeight:700, color: aoVivo ? '#ff4d6d' : '#f0f4ff' }}>
                 {jogo.placar.fora}
-                {jogo.placar.penaltisFora != null && <span style={{ fontSize:12, color:'#aab7cf' }}> ({jogo.placar.penaltisFora})</span>}
+                {jogo.placar.penaltisFora != null && <span style={{ fontSize:12, color:'#c6d1e6' }}> ({jogo.placar.penaltisFora})</span>}
               </span>
             </div>
           )}
@@ -292,10 +292,10 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
           {/* Odds (só pré-jogo) */}
           {!encerrado && !aoVivo && o.resultado?.casa && (
             <div style={{ display:'flex', gap: isMob?10:8, flexShrink:0, padding: isMob?'0':'0 4px' }}>
-              {[{v:o.resultado.casa,l:'1',c:'#00e5a0'},{v:o.resultado.empate,l:'X',c:'#aab7cf'},{v:o.resultado.fora,l:'2',c:'#4d9fff'}].filter(x=>x.v).map(({v,l,c})=>(
+              {[{v:o.resultado.casa,l:'1',c:'#00e5a0'},{v:o.resultado.empate,l:'X',c:'#c6d1e6'},{v:o.resultado.fora,l:'2',c:'#4d9fff'}].filter(x=>x.v).map(({v,l,c})=>(
                 <div key={l} style={{ textAlign:'center' }}>
                   <div style={{ fontFamily:'var(--font-mono)', fontSize: isMob?15:15, fontWeight:700, color:c }}>{parseFloat(v).toFixed(2)}</div>
-                  <div style={{ fontSize:9, color:'#7d8fad', marginTop:2, textTransform:'uppercase', letterSpacing:'.05em' }}>{l}</div>
+                  <div style={{ fontSize:9, color:'#9aabc7', marginTop:2, textTransform:'uppercase', letterSpacing:'.05em' }}>{l}</div>
                 </div>
               ))}
             </div>
@@ -304,7 +304,7 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
           <div style={{ display:'flex', alignItems:'center', gap: isMob?8:12, flex:1, justifyContent:'flex-end' }}>
             <div style={{ textAlign:'right' }}>
               <div style={{ fontFamily:'var(--font-display)', fontSize: isMob?14:17, fontWeight:800, color:'#f0f4ff' }}>{jogo.fora.nome}</div>
-              {stF && !isMob && <div style={{ fontSize:10, color:'#7d8fad', marginTop:2 }}>{stF.gols_marcados}G · #{stF.ranking_fifa}</div>}
+              {stF && !isMob && <div style={{ fontSize:10, color:'#9aabc7', marginTop:2 }}>{stF.gols_marcados}G · #{stF.ranking_fifa}</div>}
             </div>
             <Flag nome={jogo.fora.nome} size={tamanhoFlag}/>
           </div>
@@ -342,7 +342,7 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
 
       {/* Footer */}
       <div className="hfooter-card">
-        <span style={{ fontSize:12, color:'#7d8fad' }}>
+        <span style={{ fontSize:12, color:'#9aabc7' }}>
           {todosVbs.length > 0 ? `${todosVbs.length} sinal${todosVbs.length>1?'is':''} no total` : 'Sem sinais'}
         </span>
         <span className="hsee">Ver análise completa →</span>
@@ -413,7 +413,7 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
 
         {/* Timeline agrupada por dia */}
         {JOGOS.length===0 && (
-          <div style={{ textAlign:'center', padding:'48px 0', color:'#7d8fad', fontSize:14 }}>
+          <div style={{ textAlign:'center', padding:'48px 0', color:'#9aabc7', fontSize:14 }}>
             Nenhum jogo encontrado.
           </div>
         )}

@@ -176,7 +176,7 @@ function fmtDataISO(iso) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
 }
 
-const COR_RES = { V: '#00e5a0', E: '#aab7cf', D: '#ff4d6d' };
+const COR_RES = { V: '#00e5a0', E: '#c6d1e6', D: '#ff4d6d' };
 const TXT_RES = { V: 'VITÓRIA', E: 'EMPATE', D: 'DERROTA' };
 
 function golsDoTime(det, espnId) {
@@ -193,13 +193,13 @@ function LinhaJogoReal({ j, espnId }) {
     <div style={{ background:'var(--bg2, #0f1520)', border:`1px solid ${cor}22`, borderLeft:`3px solid ${cor}`, borderRadius:10, padding:'9px 12px', marginBottom:6 }}>
       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
         <span style={{ fontSize:12, fontWeight:700, color:'var(--text, #f0f4ff)', flex:1, minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-          vs {j.adversario} <span style={{ color:'var(--text3, #7d8fad)', fontWeight:500, fontSize:11 }}>{fmtDataISO(j.data)}</span>
+          vs {j.adversario} <span style={{ color:'var(--text3, #9aabc7)', fontWeight:500, fontSize:11 }}>{fmtDataISO(j.data)}</span>
         </span>
         <span style={{ fontFamily:'var(--font-mono)', fontWeight:700, fontSize:13, color:'var(--text, #f0f4ff)' }}>{j.golsPro}-{j.golsContra}</span>
         <span style={{ fontSize:10, fontWeight:800, letterSpacing:'.06em', color:cor, minWidth:56, textAlign:'right' }}>{TXT_RES[j.resultado]}</span>
       </div>
       {(gols.length > 0 || amarelos > 0 || vermelhos > 0) && (
-        <div style={{ marginTop:5, fontSize:11, color:'var(--text3, #7d8fad)', lineHeight:1.5 }}>
+        <div style={{ marginTop:5, fontSize:11, color:'var(--text3, #9aabc7)', lineHeight:1.5 }}>
           {gols.length > 0 && <>⚽ {gols.map(g => `${g.jogador}${g.minuto ? ` ${g.minuto}` : ''}`).join(' · ')}</>}
           {(amarelos > 0 || vermelhos > 0) && (
             <span style={{ marginLeft: gols.length > 0 ? 8 : 0 }}>
@@ -223,11 +223,11 @@ function LinhaH2H({ j, nomeCasa, confrontoData }) {
   return (
     <div style={{ background:'rgba(255,255,255,.02)', border:'1px solid rgba(255,255,255,.07)', borderRadius:10, padding:'10px 12px', marginBottom:6 }}>
       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-        <span style={{ fontSize:11, color:'var(--text3, #7d8fad)', minWidth:56 }}>{fmtDataISO(j.data)}</span>
+        <span style={{ fontSize:11, color:'var(--text3, #9aabc7)', minWidth:56 }}>{fmtDataISO(j.data)}</span>
         <span style={{ fontSize:12, fontWeight:700, color:'var(--text, #f0f4ff)', flex:1 }}>
           {nomeCasa} <span style={{ fontFamily:'var(--font-mono)', color: COR_RES[j.resultado] }}>{j.golsPro} x {j.golsContra}</span> {j.adversario}
         </span>
-        <span style={{ fontSize:10, color:'var(--text3, #7d8fad)', textTransform:'capitalize' }}>{(j.competicao || '').replace(/-/g,' ')}</span>
+        <span style={{ fontSize:10, color:'var(--text3, #9aabc7)', textTransform:'capitalize' }}>{(j.competicao || '').replace(/-/g,' ')}</span>
       </div>
       {(golsCasa.length > 0 || golsFora.length > 0) && (
         <div style={{ marginTop:6, display:'flex', gap:12, fontSize:11, lineHeight:1.5 }}>
@@ -236,7 +236,7 @@ function LinhaH2H({ j, nomeCasa, confrontoData }) {
         </div>
       )}
       {(fC || fF) && (
-        <div style={{ marginTop:6, fontSize:10, color:'var(--text3, #7d8fad)' }}>
+        <div style={{ marginTop:6, fontSize:10, color:'var(--text3, #9aabc7)' }}>
           {fC?.faltas != null && fF?.faltas != null && <>Faltas {fC.faltas} x {fF.faltas}</>}
           {fC?.escanteios != null && fF?.escanteios != null && <> · Escanteios {fC.escanteios} x {fF.escanteios}</>}
           {fC?.posse != null && fF?.posse != null && <> · Posse {fC.posse} x {fF.posse}</>}
@@ -409,7 +409,7 @@ export default function Analisador({ jogo, onVoltar }) {
           <div>
             {/* Dados reais — ESPN */}
             {confStatus === 'carregando' && (
-              <div style={{ textAlign:'center', padding:'28px 0', color:'var(--text3, #7d8fad)', fontSize:13 }}>
+              <div style={{ textAlign:'center', padding:'28px 0', color:'var(--text3, #9aabc7)', fontSize:13 }}>
                 Buscando resultados reais das seleções…
               </div>
             )}
@@ -423,12 +423,12 @@ export default function Analisador({ jogo, onVoltar }) {
                     <div style={{ display:'flex', gap:8, marginBottom:12 }}>
                       {[
                         { v: conf.resumoH2H.vitoriasCasa, l: jogo.casa.nome, c: '#00e5a0' },
-                        { v: conf.resumoH2H.empates,      l: 'Empates',      c: '#aab7cf' },
+                        { v: conf.resumoH2H.empates,      l: 'Empates',      c: '#c6d1e6' },
                         { v: conf.resumoH2H.vitoriasFora, l: jogo.fora.nome, c: '#4d9fff' },
                       ].map(({v,l,c}) => (
                         <div key={l} style={{ flex:1, textAlign:'center', background:'var(--bg2, #0f1520)', border:'1px solid rgba(255,255,255,.07)', borderRadius:12, padding:'12px 8px' }}>
                           <div style={{ fontFamily:'var(--font-mono)', fontSize:22, fontWeight:700, color:c }}>{v}</div>
-                          <div style={{ fontSize:10, color:'var(--text3, #7d8fad)', marginTop:2 }}>{l}</div>
+                          <div style={{ fontSize:10, color:'var(--text3, #9aabc7)', marginTop:2 }}>{l}</div>
                         </div>
                       ))}
                     </div>
@@ -445,21 +445,21 @@ export default function Analisador({ jogo, onVoltar }) {
                     <div className="ana-stats-grid" style={{ marginBottom:24, gridTemplateColumns: isMob ? '1fr' : '1fr 1fr' }}>
                       {[[jogo.casa.nome, conf.casa], [jogo.fora.nome, conf.fora]].map(([nome, t]) => t?.ultimos?.length > 0 && (
                         <div key={nome}>
-                          <div style={{ fontSize:12, fontWeight:700, color:'var(--text2, #aab7cf)', marginBottom:10 }}>{nome}</div>
+                          <div style={{ fontSize:12, fontWeight:700, color:'var(--text2, #c6d1e6)', marginBottom:10 }}>{nome}</div>
                           {t.ultimos.map(j => <LinhaJogoReal key={j.eventoId} j={j} espnId={t.espnId}/>)}
                         </div>
                       ))}
                     </div>
                   </>
                 )}
-                <div style={{ fontSize:10, color:'var(--text3, #7d8fad)', textAlign:'right', marginTop:-14, marginBottom:20 }}>
+                <div style={{ fontSize:10, color:'var(--text3, #9aabc7)', textAlign:'right', marginTop:-14, marginBottom:20 }}>
                   Fonte: ESPN · atualizado a cada 6h
                 </div>
               </>
             )}
 
             {confStatus === 'erro' && (
-              <div style={{ padding:'12px 14px', background:'rgba(255,184,48,.06)', border:'1px solid rgba(255,184,48,.2)', borderRadius:10, fontSize:12, color:'var(--text2, #aab7cf)', marginBottom:20 }}>
+              <div style={{ padding:'12px 14px', background:'rgba(255,184,48,.06)', border:'1px solid rgba(255,184,48,.2)', borderRadius:10, fontSize:12, color:'var(--text2, #c6d1e6)', marginBottom:20 }}>
                 Não foi possível carregar os resultados reais agora — mostrando dados de referência.
               </div>
             )}

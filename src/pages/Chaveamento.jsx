@@ -8,36 +8,36 @@ const S = `
 .brk-badges { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .brk-badge { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
 .brk-badge-g { color: #00e5a0; background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.2); }
-.brk-badge-d { color: #7d8fad; background: #141c2a; border: 1px solid rgba(255,255,255,.07); }
+.brk-badge-d { color: #9aabc7; background: #141c2a; border: 1px solid rgba(255,255,255,.07); }
 .brk-badge-live { color: #ff4d6d; background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.25); animation: brkpulse 1.6s infinite; }
 @keyframes brkpulse { 0%,100%{ opacity:1 } 50%{ opacity:.55 } }
 .brk-title { font-family: var(--font-display); font-weight: 800; color: #f0f4ff; line-height: 1.15; letter-spacing: -.5px; margin-bottom: 10px; }
-.brk-sub { color: #7d8fad; font-size: 13px; line-height: 1.6; max-width: 520px; margin-bottom: 8px; }
-.brk-atualizado { color: #7d8fad; font-size: 11px; margin-bottom: 24px; }
+.brk-sub { color: #9aabc7; font-size: 13px; line-height: 1.6; max-width: 520px; margin-bottom: 8px; }
+.brk-atualizado { color: #9aabc7; font-size: 11px; margin-bottom: 24px; }
 
 .brk-fasetabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
-.brk-fasetab { padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.07); cursor: pointer; transition: all .15s; background: #0f1520; color: #aab7cf; }
+.brk-fasetab { padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.07); cursor: pointer; transition: all .15s; background: #0f1520; color: #c6d1e6; }
 .brk-fasetab.on { background: #00e5a0; color: #000; border-color: transparent; }
 
 .brk-desktop { display: flex; gap: 24px; overflow-x: auto; padding-bottom: 16px; }
 .brk-coluna { display: flex; flex-direction: column; justify-content: space-around; min-width: 240px; flex-shrink: 0; }
-.brk-coluna-titulo { font-size: 11px; font-weight: 700; color: #7d8fad; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 14px; text-align: center; }
+.brk-coluna-titulo { font-size: 11px; font-weight: 700; color: #9aabc7; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 14px; text-align: center; }
 
 .brk-jogo { background: #0f1520; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 10px 12px; margin-bottom: 16px; transition: all .15s; }
 .brk-jogo.clicavel { cursor: pointer; }
 .brk-jogo.clicavel:hover { background: #141c2a; border-color: rgba(0,229,160,.25); transform: translateY(-1px); }
 .brk-jogo.live { border-color: rgba(255,77,109,.35); }
 .brk-jogo.vazio { opacity: .55; }
-.brk-jogo-meta { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 10px; color: #7d8fad; margin-bottom: 8px; }
-.brk-jogo-meta .fim  { color: #aab7cf; font-weight: 700; letter-spacing: .06em; }
+.brk-jogo-meta { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 10px; color: #9aabc7; margin-bottom: 8px; }
+.brk-jogo-meta .fim  { color: #c6d1e6; font-weight: 700; letter-spacing: .06em; }
 .brk-jogo-meta .live { color: #ff4d6d; font-weight: 800; letter-spacing: .06em; animation: brkpulse 1.6s infinite; }
 .brk-time { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
 .brk-time-nome { font-size: 13px; font-weight: 600; color: #f0f4ff; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.brk-time.perdedor .brk-time-nome { color: #7d8fad; font-weight: 500; }
-.brk-time-vazio { font-size: 13px; color: #7d8fad; font-style: italic; flex: 1; }
+.brk-time.perdedor .brk-time-nome { color: #9aabc7; font-weight: 500; }
+.brk-time-vazio { font-size: 13px; color: #9aabc7; font-style: italic; flex: 1; }
 .brk-placar { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: #f0f4ff; min-width: 18px; text-align: right; }
-.brk-time.perdedor .brk-placar { color: #7d8fad; }
-.brk-pen { font-size: 10px; color: #aab7cf; font-family: var(--font-mono); }
+.brk-time.perdedor .brk-placar { color: #9aabc7; }
+.brk-pen { font-size: 10px; color: #c6d1e6; font-family: var(--font-mono); }
 .brk-odd { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
 .brk-flag { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255,255,255,.08); }
 .brk-flag-ph { width: 22px; height: 22px; border-radius: 5px; background: #1c2537; border: 1px solid rgba(255,255,255,.08); flex-shrink: 0; }
@@ -51,8 +51,8 @@ const S = `
 .brk-final-times { display: flex; align-items: center; justify-content: center; gap: 16px; }
 .brk-final-time { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 90px; }
 .brk-final-time-nome { font-size: 15px; font-weight: 800; font-family: var(--font-display); color: #f0f4ff; }
-.brk-final-vs { font-size: 13px; color: #7d8fad; font-weight: 700; }
-.brk-final-data { font-size: 11px; color: #7d8fad; margin-top: 12px; }
+.brk-final-vs { font-size: 13px; color: #9aabc7; font-weight: 700; }
+.brk-final-data { font-size: 11px; color: #9aabc7; margin-top: 12px; }
 
 @media (max-width: 768px) { .brk-desktop { display: none; } }
 @media (min-width: 769px) { .brk-mobile  { display: none; } }
@@ -203,12 +203,12 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
         </div>
 
         {status === 'carregando' && (
-          <div style={{ textAlign: 'center', padding: '56px 0', color: '#7d8fad', fontSize: 14 }}>
+          <div style={{ textAlign: 'center', padding: '56px 0', color: '#9aabc7', fontSize: 14 }}>
             Montando o chaveamento com os resultados reais…
           </div>
         )}
         {status === 'erro' && (
-          <div style={{ padding: '14px 16px', background: 'rgba(255,184,48,.06)', border: '1px solid rgba(255,184,48,.2)', borderRadius: 12, fontSize: 13, color: '#aab7cf' }}>
+          <div style={{ padding: '14px 16px', background: 'rgba(255,184,48,.06)', border: '1px solid rgba(255,184,48,.2)', borderRadius: 12, fontSize: 13, color: '#c6d1e6' }}>
             Não foi possível carregar o chaveamento agora. Tente novamente em instantes.
           </div>
         )}

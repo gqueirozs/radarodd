@@ -22,11 +22,11 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
         .nav-logo { background:none; border:none; display:flex; align-items:center; gap:9px; cursor:pointer; padding:0; }
         .nav-logo-text { font-family:var(--font-display); font-weight:800; font-size:17px; color:#f0f4ff; letter-spacing:-.3px; }
         .nav-logo-text span { color:#00e5a0; }
-        .nav-logo-domain { font-size:9px; color:#7d8fad; letter-spacing:.05em; margin-top:1px; }
+        .nav-logo-domain { font-size:9px; color:#9aabc7; letter-spacing:.05em; margin-top:1px; }
         .nav-links { display:flex; gap:2px; }
         .nav-link { background:none; border:none; border-radius:8px; padding:6px 13px; font-size:13px; font-weight:500; transition:all .15s; cursor:pointer; white-space:nowrap; }
         .nav-link.on { background:rgba(0,229,160,.12); color:#00e5a0; }
-        .nav-link:not(.on) { color:#aab7cf; }
+        .nav-link:not(.on) { color:#c6d1e6; }
         .nav-status { display:flex; align-items:center; gap:6px; padding:5px 10px; border-radius:8px; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.06); font-size:11px; font-weight:600; white-space:nowrap; }
         .nav-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; animation:pulse 2s infinite; }
         .nav-bottom { display:none; }
@@ -47,7 +47,7 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
             font-size:11px; font-weight:600; cursor:pointer; transition:all .15s;
           }
           .nav-bottom-link.on { color:#00e5a0; }
-          .nav-bottom-link:not(.on) { color:#aab7cf; }
+          .nav-bottom-link:not(.on) { color:#c6d1e6; }
           .nav-bottom-dot { width:5px; height:5px; border-radius:50%; background:#00e5a0; opacity:0; transition:opacity .15s; }
           .nav-bottom-link.on .nav-bottom-dot { opacity:1; }
           body { padding-bottom:62px; }
@@ -71,7 +71,7 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
         <div className="nav-status">
           <div className="nav-dot" style={{ background:s.cor }}/>
           <span style={{ color:s.cor }}>{s.texto}</span>
-          {hora && apiStatus==='online' && <span className="nav-hora" style={{ color:'#7d8fad', fontWeight:400 }}>{hora}</span>}
+          {hora && apiStatus==='online' && <span className="nav-hora" style={{ color:'#9aabc7', fontWeight:400 }}>{hora}</span>}
         </div>
       </nav>
 
