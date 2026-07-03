@@ -338,11 +338,6 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
           </div>
         )}
 
-        {!temSinais && (
-          <div style={{ marginTop:12, padding:'10px 12px', background:'rgba(255,255,255,.02)', borderRadius:10, fontSize:12, color:'#4d5f7a', textAlign:'center' }}>
-            Nenhum sinal para o perfil <strong style={{ color:'#8b9ab4' }}>{PERFIS[perfil].label}</strong> neste jogo
-          </div>
-        )}
       </div>
 
       {/* Footer */}
