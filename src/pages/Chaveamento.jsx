@@ -19,9 +19,17 @@ const S = `
 .brk-fasetab { padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.07); cursor: pointer; transition: all .15s; background: #0f1520; color: #c6d1e6; }
 .brk-fasetab.on { background: #00e5a0; color: #000; border-color: transparent; }
 
-.brk-desktop { display: flex; gap: 24px; overflow-x: auto; padding-bottom: 16px; }
-.brk-coluna { display: flex; flex-direction: column; justify-content: space-around; min-width: 240px; flex-shrink: 0; }
-.brk-coluna-titulo { font-size: 11px; font-weight: 700; color: #9aabc7; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 14px; text-align: center; }
+.brk-desktop { display: flex; flex-direction: column; gap: 36px; }
+.brk-chave-nome { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.brk-chave-nome span { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #00e5a0; }
+.brk-chave-nome::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(0,229,160,.3), transparent); }
+.brk-chave:nth-child(2) .brk-chave-nome span { color: #4d9fff; }
+.brk-chave:nth-child(2) .brk-chave-nome::after { background: linear-gradient(90deg, rgba(77,159,255,.3), transparent); }
+
+.brk-arvore { display: grid; grid-template-columns: repeat(4, minmax(215px, 1fr)); gap: 10px 20px; overflow-x: auto; padding-bottom: 8px; }
+.brk-arvore .brk-jogo { margin-bottom: 0; align-self: center; width: 100%; }
+.brk-cabecalhos { display: grid; grid-template-columns: repeat(4, minmax(215px, 1fr)); gap: 0 20px; margin-bottom: 10px; }
+.brk-coluna-titulo { font-size: 10px; font-weight: 700; color: #9aabc7; text-transform: uppercase; letter-spacing: .1em; text-align: center; }
 
 .brk-jogo { background: #0f1520; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 10px 12px; margin-bottom: 16px; transition: all .15s; }
 .brk-jogo.clicavel { cursor: pointer; }
@@ -227,15 +235,49 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
               </div>
             )}
 
-            {/* Desktop: colunas */}
+            {/* Desktop: 2 chaves em árvore */}
             <div className="brk-desktop" style={{ marginTop: 24 }}>
-              {FASES_META.map(([id, titulo]) => (faseAtiva === 'todas' || faseAtiva === id) && (
-                <div className="brk-coluna" key={id}>
-                  <div className="brk-coluna-titulo">{titulo} {fases[id]?.length ? `(${fases[id].length})` : ''}</div>
-                  {(fases[id] || []).map(j => <CartaoJogo key={j.eventoId} jogo={j} jogosApi={jogosApi} onClick={handleClick} />)}
-                  {(fases[id] || []).length === 0 && (
-                    <div className="brk-jogo vazio"><div className="brk-jogo-meta">Confrontos a definir</div></div>
-                  )}
+              {(dados?.chaves || []).map((chave, ci) => (faseAtiva === 'todas' || ['segunda','oitavas','quartas','semis'].includes(faseAtiva)) && (
+                <div className="brk-chave" key={chave.nome}>
+                  <div className="brk-chave-nome"><span>{chave.nome}</span></div>
+                  <div className="brk-cabecalhos">
+                    <div className="brk-coluna-titulo">Segunda rodada</div>
+                    <div className="brk-coluna-titulo">Oitavas</div>
+                    <div className="brk-coluna-titulo">Quartas</div>
+                    <div className="brk-coluna-titulo">Semifinal</div>
+                  </div>
+                  <div className="brk-arvore" style={{ gridTemplateRows: 'repeat(8, minmax(0, auto))' }}>
+                    {/* Segunda rodada: 8 slots, 1 linha cada */}
+                    {chave.segunda.map((j, i) => (
+                      <div key={`s${i}`} style={{ gridColumn: 1, gridRow: i + 1, display:'flex' }}>
+                        {j
+                          ? <CartaoJogo jogo={j} jogosApi={jogosApi} onClick={handleClick} />
+                          : <div className="brk-jogo vazio" style={{ width:'100%' }}><div className="brk-jogo-meta">—</div></div>}
+                      </div>
+                    ))}
+                    {/* Oitavas: 4 slots, 2 linhas cada */}
+                    {chave.oitavas.map((j, i) => (
+                      <div key={`o${i}`} style={{ gridColumn: 2, gridRow: `${i * 2 + 1} / span 2`, display:'flex', alignItems:'center' }}>
+                        {j
+                          ? <CartaoJogo jogo={j} jogosApi={jogosApi} onClick={handleClick} />
+                          : <div className="brk-jogo vazio" style={{ width:'100%' }}><div className="brk-jogo-meta">A definir</div></div>}
+                      </div>
+                    ))}
+                    {/* Quartas: 2 slots, 4 linhas cada */}
+                    {chave.quartas.map((j, i) => (
+                      <div key={`q${i}`} style={{ gridColumn: 3, gridRow: `${i * 4 + 1} / span 4`, display:'flex', alignItems:'center' }}>
+                        {j
+                          ? <CartaoJogo jogo={j} jogosApi={jogosApi} onClick={handleClick} />
+                          : <div className="brk-jogo vazio" style={{ width:'100%' }}><div className="brk-jogo-meta">A definir</div></div>}
+                      </div>
+                    ))}
+                    {/* Semifinal: 1 slot, 8 linhas */}
+                    <div style={{ gridColumn: 4, gridRow: '1 / span 8', display:'flex', alignItems:'center' }}>
+                      {chave.semi
+                        ? <CartaoJogo jogo={chave.semi} jogosApi={jogosApi} onClick={handleClick} />
+                        : <div className="brk-jogo vazio" style={{ width:'100%' }}><div className="brk-jogo-meta">A definir</div></div>}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
