@@ -299,15 +299,29 @@ export default function Analisador({ jogo, onVoltar }) {
       if (d && (d.casa || d.fora)) { setConf(d); setConfStatus('ok'); }
       else setConfStatus('erro');
     });
+    let timer = null;
     if (jogo.eventoId) {
-      fetchEvento(jogo.eventoId, jogo.ligaEspn).then(d => { if (ativo && d) setEvento(d); });
+      const carregarEvento = () => fetchEvento(jogo.eventoId, jogo.ligaEspn).then(d => {
+        if (!ativo || !d) return;
+        setEvento(d);
+        // jogo rolando: reconsulta a cada 60s pra placar e lances acompanharem
+        if (d.status === 'ao-vivo' && !timer) timer = setInterval(carregarEvento, 60 * 1000);
+        if (d.status !== 'ao-vivo' && timer) { clearInterval(timer); timer = null; }
+      });
+      carregarEvento();
     }
-    return () => { ativo = false; };
+    return () => { ativo = false; if (timer) clearInterval(timer); };
   }, [jogo?.id]);
 
   if (!jogo) return null;
 
   const o    = jogo.odds || {};
+  // Estado ao vivo: prioriza o /api/evento (TTL 45s), senão o que veio na lista
+  const stReal  = evento?.status && evento.status !== 'agendado' ? evento.status : jogo.statusReal;
+  const placarR = evento?.placar || jogo.placar;
+  const relogio = evento?.relogio || jogo.relogio;
+  const aoVivoA = stReal === 'ao-vivo';
+  const encerA  = stReal === 'encerrado';
   const vbs  = (jogo.valueBets||[]).sort((a,b)=>(b.ev||0)-(a.ev||0));
   const evM  = {};
   for (const v of vbs) evM[v.mercado] = v.ev;
@@ -358,7 +372,25 @@ export default function Analisador({ jogo, onVoltar }) {
               </div>
             </div>
 
-            <div className="ana-odds-mid">
+            {(aoVivoA || encerA) && placarR && (
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, flexShrink:0 }}>
+                <span style={{
+                  fontSize:10, fontWeight:800, letterSpacing:'.08em', padding:'2px 9px', borderRadius:20,
+                  color: aoVivoA ? '#ff4d6d' : 'var(--text2, #c6d1e6)',
+                  background: aoVivoA ? 'rgba(255,77,109,.1)' : 'rgba(255,255,255,.05)',
+                  border: aoVivoA ? '1px solid rgba(255,77,109,.25)' : '1px solid rgba(255,255,255,.1)',
+                  animation: aoVivoA ? 'anapulse 1.6s infinite' : 'none',
+                }}>
+                  {aoVivoA ? `● AO VIVO${relogio ? ` ${relogio}` : ''}` : 'ENCERRADO'}
+                </span>
+                <div style={{ display:'flex', alignItems:'baseline', gap:10 }}>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?26:32, fontWeight:700, color: aoVivoA ? '#ff4d6d' : 'var(--text, #f0f4ff)' }}>{placarR.casa}</span>
+                  <span style={{ fontSize:14, color:'var(--text3, #9aabc7)', fontWeight:700 }}>x</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?26:32, fontWeight:700, color: aoVivoA ? '#ff4d6d' : 'var(--text, #f0f4ff)' }}>{placarR.fora}</span>
+                </div>
+              </div>
+            )}
+            <div className="ana-odds-mid" style={(aoVivoA || encerA) && placarR ? { display:'none' } : undefined}>
               {o.resultado?.casa && [
                 { val:o.resultado.casa,   lbl:'1', cor:'#00e5a0' },
                 { val:o.resultado.empate, lbl:'X', cor:'var(--text2)' },
@@ -394,6 +426,52 @@ export default function Analisador({ jogo, onVoltar }) {
             </div>
           </div>
         </div>
+
+        {/* Lances ao vivo / do jogo */}
+        {(aoVivoA || encerA) && evento && (evento.gols?.length > 0 || evento.cartoes?.length > 0) && (
+          <div style={{ background:'var(--bg2, #0f1520)', border:'1px solid rgba(255,255,255,.07)', borderRadius:14, padding:'14px 16px', marginBottom:18 }}>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', textTransform:'uppercase', color:'var(--text3, #9aabc7)', marginBottom:10 }}>
+              Lances do jogo
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:12 }}>
+              <div>
+                {(evento.gols||[]).filter(g => g.timeId === evento.casaId).map((g,i) => (
+                  <div key={i} style={{ fontSize:12.5, color:'var(--text, #f0f4ff)', padding:'3px 0' }}>
+                    ⚽ {g.jogador || 'Gol'} <span style={{ color:'#00e5a0', fontFamily:'var(--font-mono)', fontSize:11 }}>{g.minuto}</span>
+                    {g.penalti && <span style={{ fontSize:10, color:'var(--text3, #9aabc7)' }}> (pên.)</span>}
+                    {g.contra && <span style={{ fontSize:10, color:'var(--text3, #9aabc7)' }}> (contra)</span>}
+                  </div>
+                ))}
+                {(evento.cartoes||[]).filter(c => c.timeId === evento.casaId && c.tipo==='vermelho').map((c,i) => (
+                  <div key={i} style={{ fontSize:12, color:'var(--text2, #c6d1e6)', padding:'3px 0' }}>
+                    🟥 {c.jogador} <span style={{ fontFamily:'var(--font-mono)', fontSize:11 }}>{c.minuto}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ width:1, background:'rgba(255,255,255,.07)' }}/>
+              <div style={{ textAlign:'right' }}>
+                {(evento.gols||[]).filter(g => g.timeId === evento.foraId).map((g,i) => (
+                  <div key={i} style={{ fontSize:12.5, color:'var(--text, #f0f4ff)', padding:'3px 0' }}>
+                    <span style={{ color:'#4d9fff', fontFamily:'var(--font-mono)', fontSize:11 }}>{g.minuto}</span> {g.jogador || 'Gol'} ⚽
+                    {g.penalti && <span style={{ fontSize:10, color:'var(--text3, #9aabc7)' }}> (pên.)</span>}
+                    {g.contra && <span style={{ fontSize:10, color:'var(--text3, #9aabc7)' }}> (contra)</span>}
+                  </div>
+                ))}
+                {(evento.cartoes||[]).filter(c => c.timeId === evento.foraId && c.tipo==='vermelho').map((c,i) => (
+                  <div key={i} style={{ fontSize:12, color:'var(--text2, #c6d1e6)', padding:'3px 0' }}>
+                    <span style={{ fontFamily:'var(--font-mono)', fontSize:11 }}>{c.minuto}</span> {c.jogador} 🟥
+                  </div>
+                ))}
+              </div>
+            </div>
+            {(evento.cartoes||[]).filter(c => c.tipo==='amarelo').length > 0 && (
+              <div style={{ marginTop:8, fontSize:11, color:'var(--text3, #9aabc7)' }}>
+                🟨 {(evento.cartoes||[]).filter(c => c.tipo==='amarelo' && c.timeId===evento.casaId).length} x{' '}
+                {(evento.cartoes||[]).filter(c => c.tipo==='amarelo' && c.timeId===evento.foraId).length} amarelos
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Abas */}
         <div className="ana-tabs">
