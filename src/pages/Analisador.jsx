@@ -364,6 +364,8 @@ export default function Analisador({ jogo, onVoltar }) {
 
   // Prob bar
   let pC=50, pE=25, pF=25;
+  // Ao vivo: probabilidade lance a lance da ESPN substitui a implícita das odds
+  const probLive = (aoVivoA && evento?.probAoVivo) ? evento.probAoVivo : null;
   if (o.resultado?.casa && o.resultado?.fora) {
     const rc=1/o.resultado.casa, re=o.resultado.empate?1/o.resultado.empate:0, rf=1/o.resultado.fora;
     const t=rc+re+rf;
@@ -444,19 +446,28 @@ export default function Analisador({ jogo, onVoltar }) {
             </div>
           </div>
 
-          {/* Prob bar */}
-          <div className="ana-prob-bar">
-            <div className="ana-prob-track">
-              <div style={{ width:pC+'%', background:'linear-gradient(90deg,#00e5a0,#00c88a)' }}/>
-              <div style={{ width:pE+'%', background:'var(--bg4)', margin:'0 2px' }}/>
-              <div style={{ width:pF+'%', background:'linear-gradient(90deg,#4d9fff,#2979d9)' }}/>
-            </div>
-            <div className="ana-prob-pcts">
-              <span style={{ color:'#00e5a0' }}>{jogo.casa.nome.split(' ')[0]} {pC}%</span>
-              <span style={{ color:'var(--text3)', fontWeight:400, fontSize:10 }}>Emp {pE}%</span>
-              <span style={{ color:'#4d9fff' }}>{jogo.fora.nome.split(' ')[0]} {pF}%</span>
-            </div>
-          </div>
+          {/* Prob bar (pré-jogo: implícita das odds · ao vivo: ESPN lance a lance) */}
+          {(() => {
+            const vC = probLive ? probLive.casa   : pC;
+            const vE = probLive ? probLive.empate : pE;
+            const vF = probLive ? probLive.fora   : pF;
+            return (
+              <div className="ana-prob-bar">
+                <div className="ana-prob-track">
+                  <div style={{ width:vC+'%', background:'linear-gradient(90deg,#00e5a0,#00c88a)', transition:'width .6s ease' }}/>
+                  <div style={{ width:vE+'%', background:'var(--bg4)', margin:'0 2px', transition:'width .6s ease' }}/>
+                  <div style={{ width:vF+'%', background:'linear-gradient(90deg,#4d9fff,#2979d9)', transition:'width .6s ease' }}/>
+                </div>
+                <div className="ana-prob-pcts">
+                  <span style={{ color:'#00e5a0' }}>{jogo.casa.nome.split(' ')[0]} {vC}%</span>
+                  <span style={{ color:'var(--text3)', fontWeight:400, fontSize:10 }}>
+                    Emp {vE}%{probLive && <span style={{ color:'#ff4d6d', fontWeight:800, marginLeft:6 }}>· AO VIVO</span>}
+                  </span>
+                  <span style={{ color:'#4d9fff' }}>{jogo.fora.nome.split(' ')[0]} {vF}%</span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Lances ao vivo / do jogo */}
