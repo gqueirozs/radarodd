@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { getLogo, getStats, getH2H } from '../data/statsDB';
-import { fetchConfronto } from '../data/api';
+import { fetchConfronto, fetchEvento } from '../data/api';
 
 const STYLES = `
 .ana-wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 48px; }
@@ -246,21 +246,62 @@ function LinhaH2H({ j, nomeCasa, confrontoData }) {
   );
 }
 
+function ColunaEscalacao({ titulo, esc, cor }) {
+  if (!esc) return null;
+  return (
+    <div>
+      <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:10 }}>
+        <span style={{ fontSize:13, fontWeight:800, color:'var(--text, #f0f4ff)' }}>{titulo}</span>
+        {esc.formacao && (
+          <span style={{ fontSize:11, fontFamily:'var(--font-mono)', fontWeight:700, color:cor, background:`${cor}18`, border:`1px solid ${cor}33`, borderRadius:6, padding:'1px 7px' }}>
+            {esc.formacao}
+          </span>
+        )}
+      </div>
+      {esc.titulares.map((j, i) => (
+        <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 0', borderBottom:'1px solid rgba(255,255,255,.04)' }}>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, color:cor, minWidth:20, textAlign:'right' }}>{j.numero ?? '–'}</span>
+          <span style={{ fontSize:12.5, fontWeight:600, color:'var(--text, #f0f4ff)', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{j.nome}</span>
+          <span style={{ fontSize:10, color:'var(--text3, #9aabc7)', letterSpacing:'.05em' }}>{j.posicao}</span>
+        </div>
+      ))}
+      {esc.banco.length > 0 && (
+        <>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', color:'var(--text3, #9aabc7)', margin:'14px 0 6px' }}>Banco</div>
+          {esc.banco.map((j, i) => (
+            <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'4px 0' }}>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:11, color:'var(--text3, #9aabc7)', minWidth:20, textAlign:'right' }}>{j.numero ?? '–'}</span>
+              <span style={{ fontSize:12, color:'var(--text2, #c6d1e6)', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{j.nome}</span>
+              <span style={{ fontSize:10, color:'var(--text3, #9aabc7)' }}>{j.posicao}</span>
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function Analisador({ jogo, onVoltar }) {
   const [aba, setAba] = useState('sugestoes');
   const [conf, setConf] = useState(null);         // dados reais (ESPN)
   const [confStatus, setConfStatus] = useState('carregando'); // carregando | ok | erro
   const isMob = useIsMobile(640);
 
+  const [evento, setEvento] = useState(null); // local, escalações, banco
+
   useEffect(() => {
     let ativo = true;
     if (!jogo) return;
     setConfStatus('carregando');
+    setEvento(null);
     fetchConfronto(jogo.casa.nome, jogo.fora.nome).then(d => {
       if (!ativo) return;
       if (d && (d.casa || d.fora)) { setConf(d); setConfStatus('ok'); }
       else setConfStatus('erro');
     });
+    if (jogo.eventoId) {
+      fetchEvento(jogo.eventoId, jogo.ligaEspn).then(d => { if (ativo && d) setEvento(d); });
+    }
     return () => { ativo = false; };
   }, [jogo?.id]);
 
@@ -286,6 +327,7 @@ export default function Analisador({ jogo, onVoltar }) {
   const ABAS = [
     { id:'sugestoes',  label:'★ Sugestões' },
     { id:'estatisticas',label:'Estatísticas' },
+    ...(evento?.escalacoes ? [{ id:'escalacoes', label:'Escalações' }] : []),
     { id:'mercados',   label:'Mercados' },
     { id:'placares',   label:'Placares' },
   ];
@@ -300,6 +342,11 @@ export default function Analisador({ jogo, onVoltar }) {
         <div className="ana-header">
           <div className="ana-header-meta">
             {jogo.competicao} · {jogo.data} às {jogo.hora}
+            {evento?.local?.estadio && (
+              <span style={{ color:'var(--text3, #9aabc7)' }}>
+                {' '}· 📍 {evento.local.estadio}{evento.local.cidade ? `, ${evento.local.cidade}` : ''}
+              </span>
+            )}
             {jogo.estadio ? ` · ${jogo.estadio}` : ''}
           </div>
 
@@ -566,6 +613,24 @@ export default function Analisador({ jogo, onVoltar }) {
         )}
 
         {/* ── MERCADOS ── */}
+        {aba==='escalacoes' && evento?.escalacoes && (
+          <div>
+            <div className="ana-divider">Escalações{evento.local?.estadio ? ` — ${evento.local.estadio}` : ''}</div>
+            <div style={{ display:'grid', gridTemplateColumns: isMob ? '1fr' : '1fr 1fr', gap: isMob ? 28 : 40, marginBottom: 24 }}>
+              <ColunaEscalacao titulo={jogo.casa.nome} esc={evento.escalacoes.casa} cor="#00e5a0" />
+              <ColunaEscalacao titulo={jogo.fora.nome} esc={evento.escalacoes.fora} cor="#4d9fff" />
+            </div>
+            {evento.arbitros?.length > 0 && (
+              <div style={{ fontSize:11, color:'var(--text3, #9aabc7)' }}>
+                Arbitragem: {evento.arbitros.join(' · ')}
+              </div>
+            )}
+            <div style={{ fontSize:10, color:'var(--text3, #9aabc7)', textAlign:'right', marginTop:12 }}>
+              Fonte: ESPN
+            </div>
+          </div>
+        )}
+
         {aba==='mercados' && (
           <div className="ana-mercados">
             {[

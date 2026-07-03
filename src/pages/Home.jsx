@@ -36,6 +36,10 @@ const S = `
 .hfilters { display: flex; gap: 6px; margin-bottom: 0; flex-wrap: wrap; }
 .hfilter  { padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.07); cursor: pointer; transition: all .15s; background: #0f1520; color: #c6d1e6; }
 .hfilter.on { background: #00e5a0; color: #000; border-color: transparent; }
+.hfilter-data { display: inline-flex; align-items: center; gap: 7px; position: relative; }
+.hfilter-data input[type=date] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.hfilter-data .hfd-x { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(0,0,0,.25); font-size: 10px; line-height: 1; position: relative; z-index: 2; }
+.hfilter-data.on .hfd-x:hover { background: rgba(0,0,0,.45); }
 
 /* Perfis */
 .hperfis { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -353,14 +357,30 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
 
 export default function Home({ onSelectJogo, jogos: jogosProp }) {
   const [filtro, setFiltro]   = useState('todos');
+  const [dataSel, setDataSel] = useState('');   // 'yyyy-mm-dd' do seletor de data
   const [perfil, setPerfil]   = useState('moderado');
   const [mostrarFuturos, setMostrarFuturos] = useState(false);
   const isMob = useIsMobile(640);
-  const hoje = new Date().toLocaleDateString('pt-BR');
-  const amnh = new Date(Date.now()+86400000).toLocaleDateString('pt-BR');
+  const hoje  = new Date().toLocaleDateString('pt-BR');
+  const amnh  = new Date(Date.now()+86400000).toLocaleDateString('pt-BR');
+  const ontem = new Date(Date.now()-86400000).toLocaleDateString('pt-BR');
+  // 'yyyy-mm-dd' → 'dd/mm/yyyy' (comparação com jogo.data)
+  const dataSelBR = dataSel ? dataSel.split('-').reverse().join('/') : null;
+
+  const escolherFiltro = v => { setFiltro(v); if (v !== 'data') setDataSel(''); };
+  const escolherData = e => {
+    const v = e.target.value;
+    setDataSel(v);
+    setFiltro(v ? 'data' : 'todos');
+  };
 
   const JOGOS = (jogosProp||[])
-    .filter(j => filtro==='hoje' ? j.data===hoje : filtro==='amanhã' ? j.data===amnh : true)
+    .filter(j =>
+      filtro==='hoje'   ? j.data===hoje  :
+      filtro==='amanhã' ? j.data===amnh  :
+      filtro==='ontem'  ? j.data===ontem :
+      filtro==='data'   ? j.data===dataSelBR :
+      true)
     .sort((a,b) => {
       // Ordenar por quantidade de sinais para o perfil selecionado
       const sA = filtraParaPerfil((a.valueBets||[]).filter(v=>v.ev>0), perfil).length;
@@ -394,9 +414,27 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
         {/* Filtros de data + perfil */}
         <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:20 }}>
           <div className="hfilters">
-            {[['todos','Todos'],['hoje','Hoje'],['amanhã','Amanhã']].map(([v,l])=>(
-              <button key={v} className={`hfilter${filtro===v?' on':''}`} onClick={()=>setFiltro(v)}>{l}</button>
+            {[['todos','Todos'],['ontem','Ontem'],['hoje','Hoje'],['amanhã','Amanhã']].map(([v,l])=>(
+              <button key={v} className={`hfilter${filtro===v?' on':''}`} onClick={()=>escolherFiltro(v)}>{l}</button>
             ))}
+            <label className={`hfilter hfilter-data${filtro==='data'?' on':''}`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" style={{ position:'relative', zIndex:1 }}>
+                <rect x="3" y="5" width="18" height="16" rx="3"/>
+                <path d="M8 3v4M16 3v4M3 10h18"/>
+              </svg>
+              <span style={{ position:'relative', zIndex:1 }}>
+                {filtro==='data' && dataSelBR ? dataSelBR.slice(0,5) : 'Data'}
+              </span>
+              {filtro==='data' && dataSelBR && (
+                <span className="hfd-x" onClick={e => { e.preventDefault(); e.stopPropagation(); setDataSel(''); setFiltro('todos'); }}>✕</span>
+              )}
+              <input
+                type="date"
+                value={dataSel}
+                onChange={escolherData}
+                onClick={e => { try { e.target.showPicker && e.target.showPicker(); } catch {} }}
+              />
+            </label>
           </div>
 
           {/* Seletor de perfil */}

@@ -67,3 +67,14 @@ export async function fetchMataMata() {
     return null;
   }
 }
+
+export async function fetchEvento(eventoId, liga = 'fifa.world') {
+  try {
+    const res = await fetch(`${API_URL}/api/evento/${eventoId}?liga=${liga}`);
+    const data = await res.json();
+    return data.ok ? data : null;
+  } catch (err) {
+    console.warn('Erro ao buscar detalhes do evento:', err.message);
+    return null;
+  }
+}
