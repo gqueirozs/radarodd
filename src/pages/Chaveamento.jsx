@@ -1,40 +1,50 @@
-import React, { useState } from 'react';
-import { OITAVAS, QUARTAS, SEMIS, FINAL, TERCEIRO } from '../data/bracketData';
+import React, { useState, useEffect } from 'react';
 import { getLogo } from '../data/statsDB';
+import { fetchMataMata } from '../data/api';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 const S = `
-.brk-wrap { max-width: 1180px; margin: 0 auto; padding: 28px 16px 56px; }
+.brk-wrap { max-width: 1320px; margin: 0 auto; padding: 28px 16px 56px; }
 .brk-badges { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .brk-badge { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
 .brk-badge-g { color: #00e5a0; background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.2); }
 .brk-badge-d { color: #4d5f7a; background: #141c2a; border: 1px solid rgba(255,255,255,.07); }
+.brk-badge-live { color: #ff4d6d; background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.25); animation: brkpulse 1.6s infinite; }
+@keyframes brkpulse { 0%,100%{ opacity:1 } 50%{ opacity:.55 } }
 .brk-title { font-family: var(--font-display); font-weight: 800; color: #f0f4ff; line-height: 1.15; letter-spacing: -.5px; margin-bottom: 10px; }
-.brk-sub { color: #4d5f7a; font-size: 13px; line-height: 1.6; max-width: 480px; margin-bottom: 24px; }
+.brk-sub { color: #4d5f7a; font-size: 13px; line-height: 1.6; max-width: 520px; margin-bottom: 8px; }
+.brk-atualizado { color: #4d5f7a; font-size: 11px; margin-bottom: 24px; }
 
 .brk-fasetabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
 .brk-fasetab { padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.07); cursor: pointer; transition: all .15s; background: #0f1520; color: #8b9ab4; }
 .brk-fasetab.on { background: #00e5a0; color: #000; border-color: transparent; }
 
-.brk-desktop { display: flex; gap: 28px; overflow-x: auto; padding-bottom: 16px; }
-.brk-coluna { display: flex; flex-direction: column; justify-content: space-around; min-width: 230px; flex-shrink: 0; }
+.brk-desktop { display: flex; gap: 24px; overflow-x: auto; padding-bottom: 16px; }
+.brk-coluna { display: flex; flex-direction: column; justify-content: space-around; min-width: 240px; flex-shrink: 0; }
 .brk-coluna-titulo { font-size: 11px; font-weight: 700; color: #4d5f7a; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 14px; text-align: center; }
 
-.brk-jogo { background: #0f1520; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 10px 12px; margin-bottom: 18px; cursor: pointer; transition: all .15s; }
-.brk-jogo:hover { background: #141c2a; border-color: rgba(0,229,160,.25); transform: translateY(-1px); }
-.brk-jogo.vazio { cursor: default; opacity: .55; }
-.brk-jogo.vazio:hover { background: #0f1520; border-color: rgba(255,255,255,.07); transform: none; }
-.brk-jogo-data { font-size: 10px; color: #4d5f7a; margin-bottom: 8px; text-align: center; }
+.brk-jogo { background: #0f1520; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 10px 12px; margin-bottom: 16px; transition: all .15s; }
+.brk-jogo.clicavel { cursor: pointer; }
+.brk-jogo.clicavel:hover { background: #141c2a; border-color: rgba(0,229,160,.25); transform: translateY(-1px); }
+.brk-jogo.live { border-color: rgba(255,77,109,.35); }
+.brk-jogo.vazio { opacity: .55; }
+.brk-jogo-meta { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 10px; color: #4d5f7a; margin-bottom: 8px; }
+.brk-jogo-meta .fim  { color: #8b9ab4; font-weight: 700; letter-spacing: .06em; }
+.brk-jogo-meta .live { color: #ff4d6d; font-weight: 800; letter-spacing: .06em; animation: brkpulse 1.6s infinite; }
 .brk-time { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
 .brk-time-nome { font-size: 13px; font-weight: 600; color: #f0f4ff; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.brk-time-vazio { font-size: 13px; color: #4d5f7a; font-style: italic; }
+.brk-time.perdedor .brk-time-nome { color: #4d5f7a; font-weight: 500; }
+.brk-time-vazio { font-size: 13px; color: #4d5f7a; font-style: italic; flex: 1; }
+.brk-placar { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: #f0f4ff; min-width: 18px; text-align: right; }
+.brk-time.perdedor .brk-placar { color: #4d5f7a; }
+.brk-pen { font-size: 10px; color: #8b9ab4; font-family: var(--font-mono); }
+.brk-odd { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
 .brk-flag { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255,255,255,.08); }
 .brk-flag-ph { width: 22px; height: 22px; border-radius: 5px; background: #1c2537; border: 1px solid rgba(255,255,255,.08); flex-shrink: 0; }
 .brk-divider { height: 1px; background: rgba(255,255,255,.07); margin: 2px 0; }
 
 .brk-mobile-fase { margin-bottom: 28px; }
 .brk-mobile-titulo { font-size: 13px; font-weight: 700; color: #00e5a0; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,.07); }
-.brk-mobile-grupo { font-size: 10px; font-weight: 700; color: #4d5f7a; text-transform: uppercase; letter-spacing: .1em; margin: 14px 0 8px; }
 
 .brk-final-card { background: linear-gradient(135deg, rgba(0,229,160,.08), rgba(0,176,255,.05)); border: 1.5px solid rgba(0,229,160,.25); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; }
 .brk-final-label { font-size: 11px; font-weight: 700; color: #00e5a0; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 14px; }
@@ -44,58 +54,94 @@ const S = `
 .brk-final-vs { font-size: 13px; color: #4d5f7a; font-weight: 700; }
 .brk-final-data { font-size: 11px; color: #4d5f7a; margin-top: 12px; }
 
-@media (max-width: 768px) {
-  .brk-desktop { display: none; }
-}
-@media (min-width: 769px) {
-  .brk-mobile { display: none; }
-}
+@media (max-width: 768px) { .brk-desktop { display: none; } }
+@media (min-width: 769px) { .brk-mobile  { display: none; } }
 `;
 
+const FASES_META = [
+  ['segunda',  'Segunda rodada'],
+  ['oitavas',  'Oitavas de final'],
+  ['quartas',  'Quartas de final'],
+  ['semis',    'Semifinal'],
+];
+
 function Flag({ nome, size = 22 }) {
-  const logo = nome ? getLogo(nome) : null;
+  const logo = nome && nome !== 'A definir' ? getLogo(nome) : null;
   if (!logo) return <div className="brk-flag-ph" style={{ width: size, height: size }} />;
   return <img src={logo} alt={nome} className="brk-flag" style={{ width: size, height: size }} onError={e => { e.target.style.display = 'none'; }} />;
 }
 
-function odd(jogoCompleto, lado) {
-  const o = jogoCompleto?.odds?.resultado;
-  if (!o) return null;
-  return lado === 'casa' ? o.casa : o.fora;
+function fmtData(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' · ' +
+         d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
-function CartaoJogo({ confronto, jogosApi, onClick }) {
-  const jogoCompleto = (jogosApi || []).find(j =>
-    (j.casa?.nome === confronto.casa && j.fora?.nome === confronto.fora) ||
-    (j.casa?.nome === confronto.fora && j.fora?.nome === confronto.casa)
+function LadoTime({ t, jogo, corOdd, oddVal }) {
+  const definido = t.nome && t.nome !== 'A definir';
+  const encerrado = jogo.status === 'encerrado';
+  const perdeu = encerrado && definido && !t.vencedor &&
+    (jogo.casa.vencedor || jogo.fora.vencedor); // só marca perdedor se houve vencedor
+  return (
+    <div className={`brk-time${perdeu ? ' perdedor' : ''}`}>
+      <Flag nome={definido ? t.nome : null} />
+      {definido
+        ? <span className="brk-time-nome">{t.nome}</span>
+        : <span className="brk-time-vazio">A definir</span>}
+      {jogo.status !== 'agendado' && t.placar != null && (
+        <span className="brk-placar">
+          {t.placar}{t.penaltis != null && <span className="brk-pen"> ({t.penaltis})</span>}
+        </span>
+      )}
+      {jogo.status === 'agendado' && oddVal && (
+        <span className="brk-odd" style={{ color: corOdd }}>{parseFloat(oddVal).toFixed(2)}</span>
+      )}
+    </div>
   );
-  const vazio = !confronto.casa && !confronto.fora;
-  const oddCasa = odd(jogoCompleto, 'casa');
-  const oddFora = odd(jogoCompleto, 'fora');
+}
 
+function CartaoJogo({ jogo, jogosApi, onClick }) {
+  const definido = jogo.casa.nome !== 'A definir' || jogo.fora.nome !== 'A definir';
+  const jogoCompleto = jogo.jogoId ? (jogosApi || []).find(j => j.id === jogo.jogoId) : null;
+  const clicavel = !!jogoCompleto;
   return (
     <div
-      className={`brk-jogo${vazio ? ' vazio' : ''}`}
-      onClick={() => !vazio && jogoCompleto && onClick(jogoCompleto)}
+      className={`brk-jogo${clicavel ? ' clicavel' : ''}${jogo.status === 'ao-vivo' ? ' live' : ''}${definido ? '' : ' vazio'}`}
+      onClick={() => clicavel && onClick(jogoCompleto)}
+      title={clicavel ? 'Ver análise completa' : undefined}
     >
-      <div className="brk-jogo-data">
-        {confronto.data}{confronto.hora ? ` · ${confronto.hora}` : ''}
+      <div className="brk-jogo-meta">
+        {jogo.status === 'ao-vivo'   && <span className="live">● AO VIVO{jogo.relogio ? ` ${jogo.relogio}` : ''}</span>}
+        {jogo.status === 'encerrado' && <span className="fim">FIM{jogo.prorrogacao ? ' · PRORR.' : ''}{jogo.casa.penaltis != null ? ' · PÊN.' : ''}</span>}
+        {jogo.status === 'agendado'  && <span>{fmtData(jogo.data)}</span>}
       </div>
-      <div className="brk-time">
-        <Flag nome={confronto.casa} />
-        {confronto.casa
-          ? <span className="brk-time-nome">{confronto.casa}</span>
-          : <span className="brk-time-vazio">A definir</span>}
-        {oddCasa && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#00e5a0', fontWeight: 700 }}>{parseFloat(oddCasa).toFixed(2)}</span>}
-      </div>
+      <LadoTime t={jogo.casa} jogo={jogo} corOdd="#00e5a0" oddVal={jogo.odds?.casa} />
       <div className="brk-divider" />
-      <div className="brk-time">
-        <Flag nome={confronto.fora} />
-        {confronto.fora
-          ? <span className="brk-time-nome">{confronto.fora}</span>
-          : <span className="brk-time-vazio">A definir</span>}
-        {oddFora && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#4d9fff', fontWeight: 700 }}>{parseFloat(oddFora).toFixed(2)}</span>}
+      <LadoTime t={jogo.fora} jogo={jogo} corOdd="#4d9fff" oddVal={jogo.odds?.fora} />
+    </div>
+  );
+}
+
+function CardFinal({ jogo, label, emoji, cor }) {
+  const nome = t => (t?.nome && t.nome !== 'A definir') ? t.nome : 'A definir';
+  return (
+    <div className="brk-final-card" style={cor ? { background: 'rgba(255,184,48,.05)', borderColor: 'rgba(255,184,48,.2)' } : undefined}>
+      <div className="brk-final-label" style={cor ? { color: cor } : undefined}>{emoji} {label}</div>
+      <div className="brk-final-times">
+        <div className="brk-final-time">
+          <Flag nome={jogo?.casa?.nome !== 'A definir' ? jogo?.casa?.nome : null} size={40} />
+          <span className="brk-final-time-nome">{nome(jogo?.casa)}</span>
+          {jogo?.status !== 'agendado' && jogo?.casa?.placar != null && <span className="brk-placar" style={{ fontSize: 20 }}>{jogo.casa.placar}</span>}
+        </div>
+        <span className="brk-final-vs">VS</span>
+        <div className="brk-final-time">
+          <Flag nome={jogo?.fora?.nome !== 'A definir' ? jogo?.fora?.nome : null} size={40} />
+          <span className="brk-final-time-nome">{nome(jogo?.fora)}</span>
+          {jogo?.status !== 'agendado' && jogo?.fora?.placar != null && <span className="brk-placar" style={{ fontSize: 20 }}>{jogo.fora.placar}</span>}
+        </div>
       </div>
+      <div className="brk-final-data">{jogo ? fmtData(jogo.data) : 'Data a definir'}</div>
     </div>
   );
 }
@@ -103,20 +149,30 @@ function CartaoJogo({ confronto, jogosApi, onClick }) {
 export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
   const isMob = useIsMobile(768);
   const [faseAtiva, setFaseAtiva] = useState('todas');
+  const [dados, setDados] = useState(null);
+  const [status, setStatus] = useState('carregando'); // carregando | ok | erro
 
-  const handleClick = (jogoCompleto) => {
-    if (onSelectJogo) onSelectJogo(jogoCompleto);
-  };
+  useEffect(() => {
+    let ativo = true;
+    const carregar = () => fetchMataMata().then(d => {
+      if (!ativo) return;
+      if (d?.fases) { setDados(d); setStatus('ok'); }
+      else if (!dados) setStatus('erro');
+    });
+    carregar();
+    const timer = setInterval(carregar, 90 * 1000); // acompanha placar ao vivo
+    return () => { ativo = false; clearInterval(timer); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fases = [
+  const handleClick = j => { if (onSelectJogo) onSelectJogo(j); };
+  const fases = dados?.fases || {};
+  const temAoVivo = Object.values(fases).some(f => (f || []).some(j => j.status === 'ao-vivo'));
+
+  const abas = [
     ['todas', 'Todas as fases'],
-    ['oitavas', 'Oitavas'],
-    ['quartas', 'Quartas'],
-    ['semis', 'Semifinal'],
+    ...FASES_META.map(([id, l]) => [id, l.replace(' de final', '')]),
     ['final', 'Final'],
   ];
-
-  const grupos = { A: 'Chave A', B: 'Chave B', C: 'Chave C', D: 'Chave D' };
 
   return (
     <>
@@ -125,105 +181,76 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
         <div className="brk-badges">
           <span className="brk-badge brk-badge-g">Copa do Mundo 2026</span>
           <span className="brk-badge brk-badge-d">Mata-mata</span>
+          {temAoVivo && <span className="brk-badge brk-badge-live">● Ao vivo</span>}
         </div>
         <h1 className="brk-title" style={{ fontSize: isMob ? 24 : 30 }}>
           Chaveamento<br />
           <span style={{ color: '#00e5a0' }}>do mata-mata</span>
         </h1>
         <p className="brk-sub">
-          Acompanhe o caminho de cada seleção até a final, com odds atualizadas para os confrontos já definidos.
+          Da segunda rodada à final: placares reais, jogos ao vivo e odds atualizadas para os confrontos já definidos.
         </p>
+        {dados?.atualizadoEm && (
+          <div className="brk-atualizado">
+            Atualização automática · fonte ESPN · {new Date(dados.atualizadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        )}
 
         <div className="brk-fasetabs">
-          {fases.map(([v, l]) => (
+          {abas.map(([v, l]) => (
             <button key={v} className={`brk-fasetab${faseAtiva === v ? ' on' : ''}`} onClick={() => setFaseAtiva(v)}>{l}</button>
           ))}
         </div>
 
-        {/* ── FINAL E TERCEIRO LUGAR (sempre visível no topo) ── */}
-        {(faseAtiva === 'todas' || faseAtiva === 'final') && (
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 8 }}>
-            <div className="brk-final-card" style={{ flex: 1, minWidth: 260 }}>
-              <div className="brk-final-label">🏆 Grande final</div>
-              <div className="brk-final-times">
-                <div className="brk-final-time">
-                  <Flag nome={FINAL.casa} size={40} />
-                  <span className="brk-final-time-nome">{FINAL.casa || 'A definir'}</span>
-                </div>
-                <span className="brk-final-vs">VS</span>
-                <div className="brk-final-time">
-                  <Flag nome={FINAL.fora} size={40} />
-                  <span className="brk-final-time-nome">{FINAL.fora || 'A definir'}</span>
-                </div>
-              </div>
-              <div className="brk-final-data">{FINAL.data} às {FINAL.hora}</div>
-            </div>
-            <div className="brk-final-card" style={{ flex: 1, minWidth: 260, background: 'rgba(255,184,48,.05)', borderColor: 'rgba(255,184,48,.2)' }}>
-              <div className="brk-final-label" style={{ color: '#ffb830' }}>🥉 Terceiro lugar</div>
-              <div className="brk-final-times">
-                <div className="brk-final-time">
-                  <Flag nome={TERCEIRO.casa} size={40} />
-                  <span className="brk-final-time-nome">{TERCEIRO.casa || 'A definir'}</span>
-                </div>
-                <span className="brk-final-vs">VS</span>
-                <div className="brk-final-time">
-                  <Flag nome={TERCEIRO.fora} size={40} />
-                  <span className="brk-final-time-nome">{TERCEIRO.fora || 'A definir'}</span>
-                </div>
-              </div>
-              <div className="brk-final-data">{TERCEIRO.data} às {TERCEIRO.hora}</div>
-            </div>
+        {status === 'carregando' && (
+          <div style={{ textAlign: 'center', padding: '56px 0', color: '#4d5f7a', fontSize: 14 }}>
+            Montando o chaveamento com os resultados reais…
+          </div>
+        )}
+        {status === 'erro' && (
+          <div style={{ padding: '14px 16px', background: 'rgba(255,184,48,.06)', border: '1px solid rgba(255,184,48,.2)', borderRadius: 12, fontSize: 13, color: '#8b9ab4' }}>
+            Não foi possível carregar o chaveamento agora. Tente novamente em instantes.
           </div>
         )}
 
-        {/* ── DESKTOP: bracket horizontal ── */}
-        <div className="brk-desktop" style={{ marginTop: 24 }}>
-          {(faseAtiva === 'todas' || faseAtiva === 'oitavas') && (
-            <div className="brk-coluna">
-              <div className="brk-coluna-titulo">Oitavas de final</div>
-              {OITAVAS.map(c => <CartaoJogo key={c.id} confronto={c} jogosApi={jogosApi} onClick={handleClick} />)}
-            </div>
-          )}
-          {(faseAtiva === 'todas' || faseAtiva === 'quartas') && (
-            <div className="brk-coluna">
-              <div className="brk-coluna-titulo">Quartas de final</div>
-              {QUARTAS.map(c => <CartaoJogo key={c.id} confronto={c} jogosApi={jogosApi} onClick={handleClick} />)}
-            </div>
-          )}
-          {(faseAtiva === 'todas' || faseAtiva === 'semis') && (
-            <div className="brk-coluna">
-              <div className="brk-coluna-titulo">Semifinal</div>
-              {SEMIS.map(c => <CartaoJogo key={c.id} confronto={c} jogosApi={jogosApi} onClick={handleClick} />)}
-            </div>
-          )}
-        </div>
+        {status === 'ok' && (
+          <>
+            {/* Final e 3º lugar em destaque */}
+            {(faseAtiva === 'todas' || faseAtiva === 'final') && (
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 8 }}>
+                <div style={{ flex: 1, minWidth: 260 }}>
+                  <CardFinal jogo={fases.final?.[0]} label="Grande final" emoji="🏆" />
+                </div>
+                <div style={{ flex: 1, minWidth: 260 }}>
+                  <CardFinal jogo={fases.terceiro?.[0]} label="Terceiro lugar" emoji="🥉" cor="#ffb830" />
+                </div>
+              </div>
+            )}
 
-        {/* ── MOBILE: lista por fase ── */}
-        <div className="brk-mobile">
-          {(faseAtiva === 'todas' || faseAtiva === 'oitavas') && (
-            <div className="brk-mobile-fase">
-              <div className="brk-mobile-titulo">Oitavas de final</div>
-              {['A', 'B', 'C', 'D'].map(g => (
-                <div key={g}>
-                  <div className="brk-mobile-grupo">{grupos[g]}</div>
-                  {OITAVAS.filter(c => c.lado === g).map(c => <CartaoJogo key={c.id} confronto={c} jogosApi={jogosApi} onClick={handleClick} />)}
+            {/* Desktop: colunas */}
+            <div className="brk-desktop" style={{ marginTop: 24 }}>
+              {FASES_META.map(([id, titulo]) => (faseAtiva === 'todas' || faseAtiva === id) && (
+                <div className="brk-coluna" key={id}>
+                  <div className="brk-coluna-titulo">{titulo} {fases[id]?.length ? `(${fases[id].length})` : ''}</div>
+                  {(fases[id] || []).map(j => <CartaoJogo key={j.eventoId} jogo={j} jogosApi={jogosApi} onClick={handleClick} />)}
+                  {(fases[id] || []).length === 0 && (
+                    <div className="brk-jogo vazio"><div className="brk-jogo-meta">Confrontos a definir</div></div>
+                  )}
                 </div>
               ))}
             </div>
-          )}
-          {(faseAtiva === 'todas' || faseAtiva === 'quartas') && (
-            <div className="brk-mobile-fase">
-              <div className="brk-mobile-titulo">Quartas de final</div>
-              {QUARTAS.map(c => <CartaoJogo key={c.id} confronto={c} jogosApi={jogosApi} onClick={handleClick} />)}
+
+            {/* Mobile: lista por fase */}
+            <div className="brk-mobile">
+              {FASES_META.map(([id, titulo]) => (faseAtiva === 'todas' || faseAtiva === id) && (fases[id] || []).length > 0 && (
+                <div className="brk-mobile-fase" key={id}>
+                  <div className="brk-mobile-titulo">{titulo}</div>
+                  {(fases[id] || []).map(j => <CartaoJogo key={j.eventoId} jogo={j} jogosApi={jogosApi} onClick={handleClick} />)}
+                </div>
+              ))}
             </div>
-          )}
-          {(faseAtiva === 'todas' || faseAtiva === 'semis') && (
-            <div className="brk-mobile-fase">
-              <div className="brk-mobile-titulo">Semifinal</div>
-              {SEMIS.map(c => <CartaoJogo key={c.id} confronto={c} jogosApi={jogosApi} onClick={handleClick} />)}
-            </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </>
   );

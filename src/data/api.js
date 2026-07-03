@@ -56,3 +56,14 @@ export async function fetchConfronto(casa, fora) {
     return null;
   }
 }
+
+export async function fetchMataMata() {
+  try {
+    const res = await fetch(`${API_URL}/api/mata-mata`);
+    const data = await res.json();
+    return data.ok ? data : null;
+  } catch (err) {
+    console.warn('Erro ao buscar mata-mata:', err.message);
+    return null;
+  }
+}
