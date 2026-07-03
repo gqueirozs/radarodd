@@ -246,6 +246,38 @@ function LinhaH2H({ j, nomeCasa, confrontoData }) {
   );
 }
 
+function LinhaEstatistica({ e }) {
+  const num = v => {
+    const n = parseFloat(String(v ?? '').replace('%', '').replace(',', '.'));
+    return Number.isNaN(n) ? 0 : n;
+  };
+  const c = num(e.casa), f = num(e.fora);
+  const total = c + f;
+  const pc = total > 0 ? (c / total) * 100 : 50;
+  const domCasa = c >= f;
+  return (
+    <div style={{ padding: '7px 0' }}>
+      <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', marginBottom:5 }}>
+        <span style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color: domCasa ? '#00e5a0' : 'var(--text2, #c6d1e6)', minWidth:44 }}>
+          {e.casa ?? '–'}{e.sufixo && e.casa != null && !String(e.casa).includes('%') ? e.sufixo : ''}
+        </span>
+        <span style={{ fontSize:11, color:'var(--text3, #9aabc7)', fontWeight:600 }}>{e.label}</span>
+        <span style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color: !domCasa ? '#4d9fff' : 'var(--text2, #c6d1e6)', minWidth:44, textAlign:'right' }}>
+          {e.fora ?? '–'}{e.sufixo && e.fora != null && !String(e.fora).includes('%') ? e.sufixo : ''}
+        </span>
+      </div>
+      <div style={{ display:'flex', gap:3, height:4 }}>
+        <div style={{ flex:1, background:'rgba(255,255,255,.05)', borderRadius:2, overflow:'hidden', display:'flex', justifyContent:'flex-end' }}>
+          <div style={{ width:`${pc}%`, background: domCasa ? '#00e5a0' : 'rgba(0,229,160,.35)', borderRadius:2 }}/>
+        </div>
+        <div style={{ flex:1, background:'rgba(255,255,255,.05)', borderRadius:2, overflow:'hidden' }}>
+          <div style={{ width:`${100 - pc}%`, background: !domCasa ? '#4d9fff' : 'rgba(77,159,255,.35)', borderRadius:2 }}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ColunaEscalacao({ titulo, esc, cor }) {
   if (!esc) return null;
   return (
@@ -470,6 +502,21 @@ export default function Analisador({ jogo, onVoltar }) {
                 {(evento.cartoes||[]).filter(c => c.tipo==='amarelo' && c.timeId===evento.foraId).length} amarelos
               </div>
             )}
+          </div>
+        )}
+
+        {/* Estatísticas da partida (ao vivo / encerrado) */}
+        {(aoVivoA || encerA) && evento?.estatisticas?.length > 0 && (
+          <div style={{ background:'var(--bg2, #0f1520)', border:'1px solid rgba(255,255,255,.07)', borderRadius:14, padding:'14px 16px', marginBottom:18 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+              <span style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', textTransform:'uppercase', color:'var(--text3, #9aabc7)' }}>
+                Estatísticas da partida
+              </span>
+              {aoVivoA && (
+                <span style={{ fontSize:9, fontWeight:800, letterSpacing:'.08em', color:'#ff4d6d', animation:'anapulse 1.6s infinite' }}>● TEMPO REAL</span>
+              )}
+            </div>
+            {evento.estatisticas.map((e, i) => <LinhaEstatistica key={i} e={e} />)}
           </div>
         )}
 
