@@ -13,7 +13,7 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
     ? new Date(ultimaAtualizacao).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     : null;
 
-  const links = [['home','Jogos'],['chaveamento','Mata-mata'],['historico','Histórico']];
+  const links = [['home','Jogos'],['chaveamento','Mata-mata']];
 
   return (
     <>
