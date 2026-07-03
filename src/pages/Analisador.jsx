@@ -329,7 +329,6 @@ export default function Analisador({ jogo, onVoltar }) {
     { id:'estatisticas',label:'Estatísticas' },
     ...(evento?.escalacoes ? [{ id:'escalacoes', label:'Escalações' }] : []),
     { id:'mercados',   label:'Mercados' },
-    { id:'placares',   label:'Placares' },
   ];
 
   return (
@@ -672,34 +671,6 @@ export default function Analisador({ jogo, onVoltar }) {
         )}
 
         {/* ── PLACARES ── */}
-        {aba==='placares' && (
-          <div>
-            {(!o.placares||!o.placares.length) ? (
-              <div className="ana-empty">
-                <div style={{ color:'var(--text3)',fontSize:14 }}>Odds de placar não disponíveis.</div>
-              </div>
-            ) : (
-              <div className="ana-placares-grid" style={{ gridTemplateColumns: isMob ? '1fr' : 'repeat(3,1fr)' }}>
-                {['casa','empate','fora'].map(time=>{
-                  const cor = time==='casa'?'#00e5a0':time==='fora'?'#4d9fff':'var(--text3)';
-                  const nome = time==='casa'?jogo.casa.nome:time==='fora'?jogo.fora.nome:'Empate';
-                  const pl = (o.placares||[]).filter(p=>p.time===time).sort((a,b)=>a.odd-b.odd);
-                  return (
-                    <div key={time}>
-                      <div className="ana-placar-titulo" style={{ color:cor }}>{nome}</div>
-                      {pl.map((p,i)=>(
-                        <div key={i} className="ana-placar-row">
-                          <span className="ana-placar-nome">{p.placar}</span>
-                          <span className="ana-placar-val">{fmt(p.odd)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </>
   );
