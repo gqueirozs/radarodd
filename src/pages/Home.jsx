@@ -36,6 +36,12 @@ const S = `
 .hfilters { display: flex; gap: 6px; margin-bottom: 0; flex-wrap: wrap; }
 .hfilter  { padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.07); cursor: pointer; transition: all .15s; background: #0f1520; color: #c6d1e6; }
 .hfilter.on { background: #00e5a0; color: #000; border-color: transparent; }
+.hfilter-live { display: inline-flex; align-items: center; gap: 6px; }
+.hfilter-live .hfl-dot { width: 6px; height: 6px; border-radius: 50%; background: #ff4d6d; animation: hpulse 1.6s infinite; }
+.hfilter-live.on { background: #ff4d6d; color: #fff; border-color: transparent; }
+.hfilter-live.on .hfl-dot { background: #fff; }
+.hfilter-live .hfl-qtd { font-family: var(--font-mono); font-size: 10px; font-weight: 700; background: rgba(255,77,109,.15); color: #ff4d6d; border-radius: 10px; padding: 1px 6px; }
+.hfilter-live.on .hfl-qtd { background: rgba(0,0,0,.25); color: #fff; }
 .hfilter-data { display: inline-flex; align-items: center; gap: 7px; position: relative; }
 .hfilter-data input[type=date] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .hfilter-data .hfd-x { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(0,0,0,.25); font-size: 10px; line-height: 1; position: relative; z-index: 2; }
@@ -380,6 +386,7 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
       filtro==='amanhã' ? j.data===amnh  :
       filtro==='ontem'  ? j.data===ontem :
       filtro==='data'   ? j.data===dataSelBR :
+      filtro==='aovivo' ? j.statusReal==='ao-vivo' :
       true)
     .sort((a,b) => {
       // Ordenar por quantidade de sinais para o perfil selecionado
@@ -417,6 +424,16 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
             {[['todos','Todos'],['ontem','Ontem'],['hoje','Hoje'],['amanhã','Amanhã']].map(([v,l])=>(
               <button key={v} className={`hfilter${filtro===v?' on':''}`} onClick={()=>escolherFiltro(v)}>{l}</button>
             ))}
+            {(() => {
+              const nLive = (jogosProp||[]).filter(j => j.statusReal==='ao-vivo').length;
+              return (
+                <button className={`hfilter hfilter-live${filtro==='aovivo'?' on':''}`} onClick={()=>escolherFiltro('aovivo')}>
+                  <span className="hfl-dot"/>
+                  Ao vivo
+                  {nLive > 0 && <span className="hfl-qtd">{nLive}</span>}
+                </button>
+              );
+            })()}
             <label className={`hfilter hfilter-data${filtro==='data'?' on':''}`}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" style={{ position:'relative', zIndex:1 }}>
                 <rect x="3" y="5" width="18" height="16" rx="3"/>
