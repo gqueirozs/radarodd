@@ -337,7 +337,7 @@ export default function Analisador({ jogo, onVoltar }) {
         if (!ativo || !d) return;
         setEvento(d);
         // jogo rolando: reconsulta a cada 60s pra placar e lances acompanharem
-        if (d.status === 'ao-vivo' && !timer) timer = setInterval(carregarEvento, 60 * 1000);
+        if (d.status === 'ao-vivo' && !timer) timer = setInterval(carregarEvento, 30 * 1000);
         if (d.status !== 'ao-vivo' && timer) { clearInterval(timer); timer = null; }
       });
       carregarEvento();
