@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { getLogo } from '../data/statsDB';
-import { fetchConfronto, fetchEvento } from '../data/api';
+import { fetchConfronto, fetchEvento, fetchAnalise } from '../data/api';
 
 const STYLES = `
 .ana-wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 48px; }
@@ -300,6 +300,8 @@ export default function Analisador({ jogo, onVoltar }) {
   const isMob = useIsMobile(640);
 
   const [evento, setEvento] = useState(null); // local, escalações, banco
+  const [analise, setAnalise] = useState(null);
+  const [analiseStatus, setAnaliseStatus] = useState('carregando');
 
   // Jogo rolando/encerrado: abre em Estatísticas (sugestões pré-jogo
   // ficam desatualizadas e são ocultadas)
@@ -318,6 +320,13 @@ export default function Analisador({ jogo, onVoltar }) {
       if (!ativo) return;
       if (d && (d.casa || d.fora)) { setConf(d); setConfStatus('ok'); }
       else setConfStatus('erro');
+    });
+    setAnaliseStatus('carregando');
+    setAnalise(null);
+    fetchAnalise(jogo.id).then(d => {
+      if (!ativo) return;
+      if (d?.ok) { setAnalise(d); setAnaliseStatus('ok'); }
+      else setAnaliseStatus(d?.mensagem || 'erro');
     });
     let timer = null;
     if (jogo.eventoId) {
@@ -534,47 +543,94 @@ export default function Analisador({ jogo, onVoltar }) {
 
         {!(aoVivoA || encerA) && aba==='sugestoes' && (
           <div>
-            {vbs.filter(v=>v.ev>0).length===0 ? (
-              <div className="ana-empty">
-                <div style={{ fontSize:32, marginBottom:14 }}>🔍</div>
-                <div style={{ fontSize:15, fontWeight:600, color:'var(--text)', marginBottom:8 }}>Sem oportunidades</div>
-                <div style={{ fontSize:13, color:'var(--text3)', lineHeight:1.6, maxWidth:320, margin:'0 auto' }}>
-                  As odds não apresentam valor esperado positivo para este jogo.
-                </div>
+            {analiseStatus === 'carregando' && (
+              <div style={{ textAlign:'center', padding:'40px 0', color:'var(--text3, #9aabc7)', fontSize:13 }}>
+                Analisando mercados com base nos resultados reais…
               </div>
-            ) : (
-              <>
-                <div className="ana-sug-tip">
-                  💡 Ordenado por <strong style={{ color:'var(--text)' }}>valor esperado (EV)</strong> —
-                  diferença entre probabilidade real e implícita. EV &gt; 5% = vantagem estatística.
-                </div>
-                <div className="ana-sug-cards">
-                  {vbs.filter(v=>v.ev>0).map((vb,i)=>{
-                    const cor = evC(vb.ev);
-                    const bg  = vb.ev>5 ? 'rgba(0,229,160,.06)' : 'rgba(255,184,48,.05)';
-                    const bd  = vb.ev>5 ? 'rgba(0,229,160,.25)' : 'rgba(255,184,48,.2)';
-                    return (
-                      <div key={i} className="ana-sug-card" style={{ background:bg, border:`1px solid ${bd}` }}>
-                        <div style={{ flex:1 }}>
-                          {vb.ev>5 && <div className="ana-sug-label" style={{ color:cor }}>{i===0?'★ Melhor aposta':'★ Sugerido'}</div>}
-                          <div className="ana-sug-name">{vb.mercado}</div>
-                          <div className="ana-sug-sub">
-                            Prob. implícita: {pct(vb.odd)} · <span style={{ color:cor }}>{evL(vb.ev)}</span>
-                          </div>
-                        </div>
-                        <div style={{ textAlign:'right', flexShrink:0 }}>
-                          <div className="ana-sug-odd" style={{ fontSize:22 }}>{fmt(vb.odd)}</div>
-                          <div className="ana-sug-ev" style={{ color:cor }}>{vb.ev>0?'+':''}{vb.ev?.toFixed(1)}% EV</div>
+            )}
+
+            {analiseStatus !== 'carregando' && analiseStatus !== 'ok' && (
+              <div style={{ padding:'14px 16px', background:'rgba(255,184,48,.05)', border:'1px solid rgba(255,184,48,.18)', borderRadius:12, fontSize:13, color:'var(--text2, #c6d1e6)' }}>
+                {typeof analiseStatus === 'string' && analiseStatus !== 'erro'
+                  ? analiseStatus
+                  : 'Não foi possível montar a análise deste jogo agora.'}
+              </div>
+            )}
+
+            {analiseStatus === 'ok' && analise && (() => {
+              const NIVEIS = {
+                forte:  { rotulo: 'VALOR FORTE', cor: '#00e5a0', bg: 'rgba(0,229,160,.07)',  borda: 'rgba(0,229,160,.3)' },
+                valor:  { rotulo: 'VALOR',       cor: '#4d9fff', bg: 'rgba(77,159,255,.06)', borda: 'rgba(77,159,255,.28)' },
+                neutro: { rotulo: 'NEUTRO',      cor: '#9aabc7', bg: 'transparent',          borda: 'rgba(255,255,255,.08)' },
+                evitar: { rotulo: 'SEM VALOR',   cor: '#ff4d6d', bg: 'transparent',          borda: 'rgba(255,255,255,.08)' },
+              };
+              const comValor = analise.mercados.filter(m => m.nivel==='forte' || m.nivel==='valor');
+              const semValor = analise.mercados.filter(m => m.nivel!=='forte' && m.nivel!=='valor');
+
+              const CardMercado = ({ m }) => {
+                const nv = NIVEIS[m.nivel];
+                return (
+                  <div style={{ background: nv.bg, border:`1px solid ${nv.borda}`, borderRadius:14, padding:'14px 16px', marginBottom:10 }}>
+                    <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontSize:10, fontWeight:800, letterSpacing:'.1em', color:nv.cor, marginBottom:4 }}>{nv.rotulo}</div>
+                        <div style={{ fontSize:15, fontWeight:700, color:'var(--text, #f0f4ff)' }}>{m.mercado}</div>
+                      </div>
+                      <div style={{ textAlign:'right', flexShrink:0 }}>
+                        <div style={{ fontFamily:'var(--font-mono)', fontSize:20, fontWeight:700, color:'var(--text, #f0f4ff)' }}>{m.odd.toFixed(2)}</div>
+                        <div style={{ fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, color: m.ev >= 0 ? '#00e5a0' : '#ff4d6d' }}>
+                          {m.ev >= 0 ? '+' : ''}{m.ev}% EV
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-                <div className="ana-warn">
-                  ⚠️ EV positivo indica vantagem estatística, não garantia. Aposte com responsabilidade.
-                </div>
-              </>
-            )}
+                    </div>
+
+                    {/* Nossa estimativa vs preço da casa */}
+                    <div style={{ display:'flex', gap:14, marginTop:10, fontSize:11, color:'var(--text3, #9aabc7)', flexWrap:'wrap' }}>
+                      <span>Nossa estimativa: <strong style={{ color:'var(--text, #f0f4ff)', fontFamily:'var(--font-mono)' }}>{m.probFinal}%</strong></span>
+                      <span>Preço da casa: <strong style={{ color:'var(--text2, #c6d1e6)', fontFamily:'var(--font-mono)' }}>{m.probJusta}%</strong></span>
+                      {m.probEmpirica != null && (
+                        <span>Frequência real: <strong style={{ color:'var(--text2, #c6d1e6)', fontFamily:'var(--font-mono)' }}>{m.probEmpirica}%</strong> ({m.amostra} jogos)</span>
+                      )}
+                    </div>
+
+                    {/* Evidência verificável */}
+                    <div style={{ marginTop:8, fontSize:12, color:'var(--text2, #c6d1e6)', lineHeight:1.6 }}>
+                      📊 {m.evidencia}
+                      {m.h2h && <span style={{ color:'var(--text3, #9aabc7)' }}> · {m.h2h.texto}</span>}
+                    </div>
+                  </div>
+                );
+              };
+
+              return (
+                <>
+                  <div style={{ padding:'10px 14px', background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.07)', borderRadius:10, fontSize:11.5, color:'var(--text3, #9aabc7)', lineHeight:1.6, marginBottom:16 }}>
+                    Base: <strong style={{ color:'var(--text2, #c6d1e6)' }}>{analise.base.jogosAnalisados} jogos recentes</strong>
+                    {analise.base.confrontosDiretos > 0 && <> + <strong style={{ color:'var(--text2, #c6d1e6)' }}>{analise.base.confrontosDiretos} confronto{analise.base.confrontosDiretos>1?'s':''} direto{analise.base.confrontosDiretos>1?'s':''}</strong></>}
+                    {' '}· {analise.base.metodologia}
+                  </div>
+
+                  {comValor.length === 0 && (
+                    <div style={{ textAlign:'center', padding:'28px 16px', background:'var(--bg2, #0f1520)', border:'1px solid rgba(255,255,255,.07)', borderRadius:14, marginBottom:16 }}>
+                      <div style={{ fontSize:15, fontWeight:700, color:'var(--text, #f0f4ff)', marginBottom:6 }}>Nenhum valor identificado neste jogo</div>
+                      <div style={{ fontSize:12.5, color:'var(--text3, #9aabc7)', lineHeight:1.6, maxWidth:400, margin:'0 auto' }}>
+                        As odds estão alinhadas com a frequência real dos eventos — e não apostar
+                        também é uma decisão de valor. Veja abaixo a análise de cada mercado.
+                      </div>
+                    </div>
+                  )}
+
+                  {comValor.map(m => <CardMercado key={m.id} m={m} />)}
+
+                  {semValor.length > 0 && (
+                    <>
+                      <div className="ana-divider" style={{ marginTop: comValor.length ? 20 : 0 }}>Demais mercados analisados</div>
+                      {semValor.map(m => <CardMercado key={m.id} m={m} />)}
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 

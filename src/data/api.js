@@ -78,3 +78,13 @@ export async function fetchEvento(eventoId, liga = 'fifa.world') {
     return null;
   }
 }
+
+export async function fetchAnalise(idJogo) {
+  try {
+    const res = await fetch(`${API_URL}/api/analise/${encodeURIComponent(idJogo)}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Erro ao buscar análise:', err.message);
+    return null;
+  }
+}
