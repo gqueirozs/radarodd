@@ -240,8 +240,8 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
   const encerrado = jogo.statusReal === 'encerrado';
   const aoVivo    = jogo.statusReal === 'ao-vivo';
 
-  // Filtrar sinais pelo perfil (jogo encerrado não tem sinal a exibir)
-  const todosVbs  = encerrado ? [] : (jogo.valueBets || []).filter(v => v.ev > 0).sort((a,b)=>b.ev-a.ev);
+  // Sinais só no pré-jogo: rolando ou encerrado, as odds base já venceram
+  const todosVbs  = (encerrado || aoVivo) ? [] : (jogo.valueBets || []).filter(v => v.ev > 0).sort((a,b)=>b.ev-a.ev);
   const sinaisFiltrados = filtraParaPerfil(todosVbs, perfil);
   const sinaisExibidos  = sinaisFiltrados.slice(0, isMob ? 2 : 3);
   const temSinais = sinaisExibidos.length > 0;

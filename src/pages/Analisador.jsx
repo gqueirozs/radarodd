@@ -321,6 +321,14 @@ export default function Analisador({ jogo, onVoltar }) {
 
   const [evento, setEvento] = useState(null); // local, escalações, banco
 
+  // Jogo rolando/encerrado: abre em Estatísticas (sugestões pré-jogo
+  // ficam desatualizadas e são ocultadas)
+  useEffect(() => {
+    if (jogo && (jogo.statusReal === 'ao-vivo' || jogo.statusReal === 'encerrado') && aba === 'sugestoes') {
+      setAba('estatisticas');
+    }
+  }, [jogo?.id]); // eslint-disable-next-line
+
   useEffect(() => {
     let ativo = true;
     if (!jogo) return;
@@ -540,7 +548,16 @@ export default function Analisador({ jogo, onVoltar }) {
         </div>
 
         {/* ── SUGESTÕES ── */}
-        {aba==='sugestoes' && (
+        {(aoVivoA || encerA) && (aba==='sugestoes' || aba==='mercados') && (
+          <div style={{ padding:'16px 18px', background:'rgba(255,184,48,.05)', border:'1px solid rgba(255,184,48,.18)', borderRadius:14, fontSize:13, color:'var(--text2, #c6d1e6)', lineHeight:1.7 }}>
+            <strong style={{ color:'#ffb830' }}>{aoVivoA ? 'Jogo em andamento' : 'Jogo encerrado'}</strong> — as sugestões
+            e odds exibidas aqui são calculadas no pré-jogo e ficam desatualizadas
+            {aoVivoA ? ' com a partida rolando' : ' após o fim da partida'}. Confira as
+            estatísticas e os lances em tempo real nas outras abas.
+          </div>
+        )}
+
+        {!(aoVivoA || encerA) && aba==='sugestoes' && (
           <div>
             {vbs.filter(v=>v.ev>0).length===0 ? (
               <div className="ana-empty">
@@ -766,7 +783,7 @@ export default function Analisador({ jogo, onVoltar }) {
           </div>
         )}
 
-        {aba==='mercados' && (
+        {!(aoVivoA || encerA) && aba==='mercados' && (
           <div className="ana-mercados">
             {[
               { titulo:'Resultado (90 minutos)', itens:[
