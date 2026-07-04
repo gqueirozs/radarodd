@@ -254,7 +254,7 @@ function LinhaEstatistica({ e }) {
   const c = num(e.casa), f = num(e.fora);
   const total = c + f;
   const pc = total > 0 ? (c / total) * 100 : 50;
-  const domCasa = c >= f;
+  const domCasa = e.menorMelhor ? c <= f : c >= f;
   return (
     <div style={{ padding: '7px 0' }}>
       <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', marginBottom:5 }}>
@@ -637,6 +637,49 @@ export default function Analisador({ jogo, onVoltar }) {
                   </>
                 )}
 
+                {/* Comparativo das seleções (calculado dos resultados reais) */}
+                {conf.casa?.ultimos?.length > 0 && conf.fora?.ultimos?.length > 0 && (() => {
+                  const resumo = t => {
+                    const js = t.ultimos || [];
+                    const v = js.filter(j => j.resultado === 'V').length;
+                    const e = js.filter(j => j.resultado === 'E').length;
+                    const d = js.filter(j => j.resultado === 'D').length;
+                    const gp = js.reduce((n, j) => n + j.golsPro, 0);
+                    const gc = js.reduce((n, j) => n + j.golsContra, 0);
+                    const aproveitamento = js.length ? Math.round((v * 3 + e) / (js.length * 3) * 100) : 0;
+                    return { n: js.length, v, e, d, gp, gc, aproveitamento, forma: js.slice(0, 5) };
+                  };
+                  const rc = resumo(conf.casa);
+                  const rf = resumo(conf.fora);
+                  const linhas = [
+                    { label: 'Vitórias',        casa: rc.v,  fora: rf.v },
+                    { label: 'Gols marcados',   casa: rc.gp, fora: rf.gp },
+                    { label: 'Gols sofridos',   casa: rc.gc, fora: rf.gc, menorMelhor: true },
+                    { label: 'Aproveitamento',  casa: rc.aproveitamento, fora: rf.aproveitamento, sufixo: '%' },
+                  ];
+                  const Dot = ({ r }) => (
+                    <span style={{ width:18, height:18, borderRadius:'50%', display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:800,
+                      color: r==='V' ? '#000' : '#fff',
+                      background: r==='V' ? '#00e5a0' : r==='E' ? '#3a4356' : '#ff4d6d' }}>{r}</span>
+                  );
+                  return (
+                    <>
+                      <div className="ana-divider">Comparativo — últimos {rc.n} jogos de cada seleção</div>
+                      <div style={{ background:'var(--bg2, #0f1520)', border:'1px solid rgba(255,255,255,.07)', borderRadius:14, padding:'14px 16px', marginBottom:24 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+                          <div style={{ display:'flex', gap:4 }}>{rc.forma.slice().reverse().map((j,i)=><Dot key={i} r={j.resultado}/>)}</div>
+                          <span style={{ fontSize:10, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', color:'var(--text3, #9aabc7)' }}>Forma recente</span>
+                          <div style={{ display:'flex', gap:4 }}>{rf.forma.slice().reverse().map((j,i)=><Dot key={i} r={j.resultado}/>)}</div>
+                        </div>
+                        {linhas.map((e,i)=><LinhaEstatistica key={i} e={e}/>)}
+                        <div style={{ fontSize:10, color:'var(--text3, #9aabc7)', textAlign:'center', marginTop:8 }}>
+                          {jogo.casa.nome} à esquerda · {jogo.fora.nome} à direita · Copa e amistosos recentes
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+
                 {/* Últimos jogos reais */}
                 {(conf.casa?.ultimos?.length > 0 || conf.fora?.ultimos?.length > 0) && (
                   <>
@@ -661,42 +704,6 @@ export default function Analisador({ jogo, onVoltar }) {
               <div style={{ padding:'12px 14px', background:'rgba(255,184,48,.06)', border:'1px solid rgba(255,184,48,.2)', borderRadius:10, fontSize:12, color:'var(--text2, #c6d1e6)', marginBottom:20 }}>
                 Não foi possível carregar os resultados reais agora — mostrando dados de referência.
               </div>
-            )}
-
-            {(stC||stF) && (
-              <>
-                <div className="ana-divider">Fase de grupos — Copa 2026</div>
-                <div className="ana-stats-grid" style={{ marginBottom:24, gridTemplateColumns: isMob ? '1fr' : '1fr 1fr' }}>
-                  {[[jogo.casa.nome,stC,'#00e5a0'],[jogo.fora.nome,stF,'#4d9fff']].map(([nome,st,cor])=>st&&(
-                    <div key={nome} className="ana-stat-card">
-                      <div className="ana-stat-header">
-                        <img src={getLogo(nome)} alt={nome} style={{ width:36,height:36,borderRadius:7,objectFit:'cover',border:'2px solid rgba(255,255,255,.1)',flexShrink:0 }} onError={e=>{e.target.style.display='none';}}/>
-                        <span style={{ fontWeight:700, fontSize:15, color:'var(--text)' }}>{nome}</span>
-                      </div>
-                      <div className="ana-stat-nums">
-                        {[{v:st.gols_marcados,l:'Gols marcados',c:cor},{v:st.gols_sofridos,l:'Gols sofridos',c:'#ff4d6d'},{v:`#${st.ranking_fifa}`,l:'Ranking FIFA',c:'var(--text2)'}].map(({v,l,c})=>(
-                          <div key={l} className="ana-stat-num">
-                            <div className="ana-stat-num-val" style={{ color:c }}>{v}</div>
-                            <div className="ana-stat-num-lbl">{l}</div>
-                          </div>
-                        ))}
-                      </div>
-                      <StatBar label="Posse de bola" val={`${st.posse_media}%`} valRaw={st.posse_media} max={70} cor={cor}/>
-                      <StatBar label="Chutes a gol/jogo" val={st.chutes_gol_media} valRaw={st.chutes_gol_media} max={12} cor={cor}/>
-                      <StatBar label="Escanteios/jogo" val={st.escanteios_media} valRaw={st.escanteios_media} max={10} cor={cor}/>
-                      {st.artilheiro_copa && (
-                        <div className="ana-artilheiro">
-                          <div>
-                            <div className="ana-artilheiro-label">Artilheiro na Copa</div>
-                            <div className="ana-artilheiro-nome">{st.artilheiro_copa.nome}</div>
-                          </div>
-                          <div style={{ fontFamily:'var(--font-mono)',fontSize:20,fontWeight:700,color:cor }}>{st.artilheiro_copa.gols} ⚽</div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </>
             )}
 
             {/* Forma (referência local — só quando os dados reais falham) */}
@@ -750,17 +757,6 @@ export default function Analisador({ jogo, onVoltar }) {
               </>
             )}
 
-            {/* Contexto Copa */}
-            <div className="ana-divider">Contexto da Copa 2026</div>
-            <div className="ana-ctx-grid" style={{ gridTemplateColumns: isMob ? '1fr' : 'repeat(3,1fr)' }}>
-              {[{v:'2.99',l:'Gols por jogo',s:'Maior desde 1958',c:'#00e5a0'},{v:'61%',l:'Jogos +2.5 gols',s:'Fase de grupos',c:'#ffb830'},{v:'78%',l:'Decididos em 90min',s:'Fase de grupos',c:'#4d9fff'}].map(({v,l,s,c})=>(
-                <div key={l} className="ana-ctx-card">
-                  <div className="ana-ctx-val" style={{ color:c }}>{v}</div>
-                  <div className="ana-ctx-lbl">{l}</div>
-                  <div className="ana-ctx-sub">{s}</div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
