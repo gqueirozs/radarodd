@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getLogo, getStats } from '../data/statsDB';
+import { getLogo } from '../data/statsDB';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 /* ─── Perfil de apostador ───────────────────────────────────────────
@@ -234,8 +234,6 @@ function probReal(odd) {
 
 function CardJogo({ jogo, perfil, isMob, onClick }) {
   const o   = jogo.odds || {};
-  const stC = getStats(jogo.casa.nome);
-  const stF = getStats(jogo.fora.nome);
 
   const encerrado = jogo.statusReal === 'encerrado';
   const aoVivo    = jogo.statusReal === 'ao-vivo';
@@ -281,7 +279,6 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
               <Flag nome={jogo.casa.nome} size={tamanhoFlag}/>
               <div style={{ minWidth:0 }}>
                 <div style={{ fontFamily:'var(--font-display)', fontSize: isMob?14:17, fontWeight:800, color:'#f0f4ff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{jogo.casa.nome}</div>
-                {stC && !isMob && <div style={{ fontSize:10, color:'#9aabc7', marginTop:2 }}>{stC.gols_marcados}G · #{stC.ranking_fifa}</div>}
               </div>
             </div>
           );
@@ -289,7 +286,6 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
             <div style={{ display:'flex', alignItems:'center', gap: isMob?8:12, flex:1, justifyContent:'flex-end', minWidth:0 }}>
               <div style={{ textAlign:'right', minWidth:0 }}>
                 <div style={{ fontFamily:'var(--font-display)', fontSize: isMob?14:17, fontWeight:800, color:'#f0f4ff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{jogo.fora.nome}</div>
-                {stF && !isMob && <div style={{ fontSize:10, color:'#9aabc7', marginTop:2 }}>{stF.gols_marcados}G · #{stF.ranking_fifa}</div>}
               </div>
               <Flag nome={jogo.fora.nome} size={tamanhoFlag}/>
             </div>

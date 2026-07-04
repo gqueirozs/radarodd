@@ -6,7 +6,6 @@ import Home from './pages/Home';
 import Analisador from './pages/Analisador';
 import Chaveamento from './pages/Chaveamento';
 import { fetchJogos, fetchStatus } from './data/api';
-import { JOGOS as JOGOS_MOCK } from './data/mockData';
 
 /* Rota /partida/:id — encontra o jogo pelo id da URL */
 function PaginaPartida({ jogos, apiStatus }) {
@@ -29,7 +28,7 @@ function PaginaPartida({ jogos, apiStatus }) {
 }
 
 function AppRotas() {
-  const [jogos, setJogos] = useState(JOGOS_MOCK);
+  const [jogos, setJogos] = useState([]);
   const [apiStatus, setApiStatus] = useState('loading');
   const [ultimaAtualizacao, setUltimaAtualizacao] = useState(null);
   const navigate = useNavigate();
@@ -52,11 +51,10 @@ function AppRotas() {
         setApiStatus('online');
         setUltimaAtualizacao(status?.ultimaAtualizacao);
       } else {
-        setJogos(JOGOS_MOCK);
-        setApiStatus(s => (s === 'online' ? 'online' : 'mock'));
+        // API acordando/repopulando: mantém o que houver, sem dados fictícios
+        setApiStatus(s => (s === 'online' ? 'online' : 'loading'));
       }
     } catch {
-      setJogos(JOGOS_MOCK);
       setApiStatus('offline');
     }
   }

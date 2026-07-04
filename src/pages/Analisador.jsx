@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { getLogo, getStats, getH2H } from '../data/statsDB';
+import { getLogo } from '../data/statsDB';
 import { fetchConfronto, fetchEvento } from '../data/api';
 
 const STYLES = `
@@ -128,26 +128,6 @@ function StatBar({ label, val, valRaw, max=100, cor='#00e5a0' }) {
       </div>
       <div className="ana-bar-track">
         <div className="ana-bar-fill" style={{ width:w+'%', background:cor }}/>
-      </div>
-    </div>
-  );
-}
-
-function FormaItem({ jogo }) {
-  const cor = jogo.resultado==='V' ? '#00e5a0' : jogo.resultado==='E' ? '#ffb830' : '#ff4d6d';
-  const label = jogo.resultado==='V' ? 'Vitória' : jogo.resultado==='E' ? 'Empate' : 'Derrota';
-  return (
-    <div className="ana-forma-item" style={{ background:cor+'0D', border:`1px solid ${cor}22` }}>
-      <div className="ana-forma-left">
-        <div className="ana-forma-dot" style={{ background:cor }}/>
-        <div>
-          <span className="ana-forma-adv">vs {jogo.adversario}</span>
-          <span className="ana-forma-data" style={{ marginLeft:8 }}>{jogo.data}</span>
-        </div>
-      </div>
-      <div className="ana-forma-right">
-        <span className="ana-forma-placar">{jogo.placar}</span>
-        <span className="ana-forma-result" style={{ color:cor }}>{label}</span>
       </div>
     </div>
   );
@@ -366,9 +346,6 @@ export default function Analisador({ jogo, onVoltar }) {
   const evM  = {};
   for (const v of vbs) evM[v.mercado] = v.ev;
 
-  const stC  = getStats(jogo.casa.nome);
-  const stF  = getStats(jogo.fora.nome);
-  const h2h  = getH2H(jogo.casa.nome, jogo.fora.nome);
 
   // Prob bar
   let pC=50, pE=25, pF=25;
@@ -410,7 +387,6 @@ export default function Analisador({ jogo, onVoltar }) {
               <FlagImg nome={jogo.casa.nome}/>
               <div style={{ minWidth:0 }}>
                 <div className="ana-team-name" style={{ fontSize: isMob ? 17 : 22 }}>{jogo.casa.nome}</div>
-                {stC && <div className="ana-team-sub">{stC.gols_marcados}G · #{stC.ranking_fifa} FIFA</div>}
               </div>
             </div>
 
@@ -448,7 +424,6 @@ export default function Analisador({ jogo, onVoltar }) {
             <div className="ana-team-block ana-team-block-right">
               <div style={{ minWidth:0 }}>
                 <div className="ana-team-name" style={{ fontSize: isMob ? 17 : 22, textAlign:'right' }}>{jogo.fora.nome}</div>
-                {stF && <div className="ana-team-sub" style={{ textAlign:'right' }}>{stF.gols_marcados}G · #{stF.ranking_fifa} FIFA</div>}
               </div>
               <FlagImg nome={jogo.fora.nome}/>
             </div>
@@ -702,59 +677,8 @@ export default function Analisador({ jogo, onVoltar }) {
 
             {confStatus === 'erro' && (
               <div style={{ padding:'12px 14px', background:'rgba(255,184,48,.06)', border:'1px solid rgba(255,184,48,.2)', borderRadius:10, fontSize:12, color:'var(--text2, #c6d1e6)', marginBottom:20 }}>
-                Não foi possível carregar os resultados reais agora — mostrando dados de referência.
+                Não foi possível carregar as estatísticas reais agora. Tente novamente em instantes.
               </div>
-            )}
-
-            {/* Forma (referência local — só quando os dados reais falham) */}
-            {confStatus !== 'ok' && (stC?.forma_copa||stF?.forma_copa) && (
-              <>
-                <div className="ana-divider">Últimos jogos na Copa</div>
-                <div className="ana-stats-grid" style={{ marginBottom:24, gridTemplateColumns: isMob ? '1fr' : '1fr 1fr' }}>
-                  {[[jogo.casa.nome,stC],[jogo.fora.nome,stF]].map(([nome,st])=>st?.forma_copa&&(
-                    <div key={nome}>
-                      <div style={{ fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:10 }}>{nome}</div>
-                      {st.forma_copa.map((j,i)=><FormaItem key={i} jogo={j}/>)}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* H2H (referência local — só quando os dados reais falham) */}
-            {confStatus !== 'ok' && h2h && (
-              <>
-                <div className="ana-divider">Histórico de confrontos diretos</div>
-                <div className="ana-h2h-box" style={{ marginBottom:24 }}>
-                  <div className="ana-h2h-nums">
-                    <div>
-                      <div className="ana-h2h-num" style={{ color:'#00e5a0' }}>
-                        {h2h[Object.keys(h2h).find(k=>!['total','empates','confrontos','nota'].includes(k)&&!k.includes('gols'))]||0}
-                      </div>
-                      <div className="ana-h2h-sub">{jogo.casa.nome}</div>
-                    </div>
-                    <div>
-                      <div className="ana-h2h-num" style={{ color:'var(--text2)' }}>{h2h.empates||0}</div>
-                      <div className="ana-h2h-sub">Empates</div>
-                    </div>
-                    <div>
-                      <div className="ana-h2h-num" style={{ color:'#4d9fff' }}>
-                        {h2h[Object.keys(h2h).filter(k=>!['total','empates','confrontos','nota'].includes(k)&&!k.includes('gols')).slice(-1)[0]]||0}
-                      </div>
-                      <div className="ana-h2h-sub">{jogo.fora.nome}</div>
-                    </div>
-                  </div>
-                  {h2h.nota && <div className="ana-h2h-nota">📊 {h2h.nota}</div>}
-                  {h2h.confrontos?.map((c,i)=>(
-                    <div key={i} className="ana-h2h-row">
-                      <span style={{ color:'var(--text3)',fontSize:11,minWidth:60 }}>{c.data}</span>
-                      <span style={{ color:'var(--text3)',fontSize:11,flex:1 }}>{c.competicao}</span>
-                      <span style={{ fontFamily:'var(--font-mono)',fontWeight:700,color:'var(--text)',fontSize:13 }}>{c.placar}</span>
-                      <span style={{ fontSize:11,fontWeight:600,color:'var(--text2)',minWidth:70,textAlign:'right' }}>{c.vencedor}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
             )}
 
           </div>

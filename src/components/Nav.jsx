@@ -5,7 +5,6 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
   const s = {
     online:  { cor: '#00e5a0', texto: 'Ao vivo' },
     loading: { cor: '#ffb830', texto: 'Atualizando' },
-    mock:    { cor: '#ffb830', texto: 'Demo' },
     offline: { cor: '#ff4d6d', texto: 'Offline' },
   }[apiStatus] || { cor: '#ffb830', texto: '...' };
 
