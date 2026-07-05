@@ -46,9 +46,18 @@ const S = `
 .pm-alt button { background:none; border:none; color:#00e5a0; font-weight:700; cursor:pointer; font-size:12.5px; }
 .pm-fechar { position:absolute; top:14px; right:16px; background:none; border:none; color:#9aabc7; font-size:20px; cursor:pointer; }
 
-.pm-pix-codigo { background:#090d14; border:1px dashed rgba(255,255,255,.15); border-radius:12px; padding:12px; font-family:var(--font-mono); font-size:10.5px; color:#c6d1e6; word-break:break-all; max-height:96px; overflow-y:auto; margin-bottom:12px; }
-.pm-copiar { width:100%; padding:12px; border-radius:10px; border:1px solid rgba(0,229,160,.35); background:rgba(0,229,160,.08); color:#00e5a0; font-weight:700; font-size:13px; cursor:pointer; }
-.pm-aguardando { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:16px; font-size:12px; color:#9aabc7; }
+.pm-modal-pix { text-align:center; padding-top:4px; }
+.pm-modal-pix .pm-valor { display:flex; align-items:baseline; justify-content:center; gap:8px; margin-bottom:22px; }
+.pm-modal-pix .pm-valor strong { font-family:var(--font-mono); font-size:32px; font-weight:700; color:#f0f4ff; }
+.pm-modal-pix .pm-valor span { font-size:12px; color:#9aabc7; letter-spacing:.02em; }
+.pm-qr-wrap { display:flex; justify-content:center; margin-bottom:18px; }
+.pm-qr-wrap img { width:200px; height:200px; border-radius:14px; background:#fff; padding:10px; box-shadow:0 8px 32px rgba(0,229,160,.08); }
+.pm-pix-label { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#9aabc7; margin-bottom:8px; text-align:center; }
+.pm-pix-codigo { background:#090d14; border:1px dashed rgba(255,255,255,.15); border-radius:12px; padding:12px 14px; font-family:var(--font-mono); font-size:10px; color:#c6d1e6; word-break:break-all; line-height:1.55; max-height:78px; overflow-y:auto; margin-bottom:10px; text-align:left; }
+.pm-copiar { width:100%; padding:13px; border-radius:11px; border:1px solid rgba(0,229,160,.35); background:rgba(0,229,160,.08); color:#00e5a0; font-weight:700; font-size:13px; cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.pm-copiar:hover { background:rgba(0,229,160,.15); border-color:rgba(0,229,160,.55); }
+.pm-aguardando { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:20px; padding:12px; background:rgba(255,184,48,.04); border:1px solid rgba(255,184,48,.14); border-radius:10px; font-size:12px; color:#c6d1e6; }
+.pm-aguardando strong { color:#ffb830; font-weight:700; }
 .pm-dot { width:7px; height:7px; border-radius:50%; background:#ffb830; animation:pmpulse 1.4s infinite; }
 @keyframes pmpulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 .pm-sucesso { text-align:center; padding:12px 0; }
@@ -239,27 +248,39 @@ function ModalPix({ aberto, aoFechar }) {
             <div className="pm-alt" style={{ color:'#9aabc7' }}>Sem renovação automática: você paga só quando quiser continuar.</div>
           </>
         ) : (
-          <>
-            <h3>Pague com PIX</h3>
+          <div className="pm-modal-pix">
+            <h3 style={{ textAlign:'center', margin:'0 0 6px' }}>Pague com PIX</h3>
+            <div className="pm-valor"><strong>R$ 9,99</strong><span>· SinalOdds Premium · 30 dias</span></div>
+
             {cobranca.qrcode && (
-              <div style={{ textAlign:'center', marginBottom:14 }}>
-                <img
-                  src={cobranca.qrcode.startsWith('data:') ? cobranca.qrcode : `data:image/png;base64,${cobranca.qrcode}`}
-                  alt="QR Code PIX"
-                  style={{ width:190, height:190, borderRadius:12, background:'#fff', padding:8 }}
-                />
-              </div>
-            )}
-            {cobranca.copiaCola && (
               <>
-                <div className="pm-pix-codigo">{cobranca.copiaCola}</div>
-                <button className="pm-copiar" onClick={copiar}>{copiado ? '✓ Copiado!' : 'Copiar código PIX'}</button>
+                <div className="pm-pix-label">Aponte a câmera do banco</div>
+                <div className="pm-qr-wrap">
+                  <img
+                    src={cobranca.qrcode.startsWith('data:') ? cobranca.qrcode : `data:image/png;base64,${cobranca.qrcode}`}
+                    alt="QR Code PIX"
+                  />
+                </div>
               </>
             )}
+
+            {cobranca.copiaCola && (
+              <>
+                <div className="pm-pix-label">Ou copie e cole</div>
+                <div className="pm-pix-codigo">{cobranca.copiaCola}</div>
+                <button className="pm-copiar" onClick={copiar}>
+                  {copiado
+                    ? <>✓ Código copiado</>
+                    : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copiar código PIX</>}
+                </button>
+              </>
+            )}
+
             <div className="pm-aguardando">
-              <span className="pm-dot" /> Aguardando confirmação — libera na hora após o pagamento
+              <span className="pm-dot" />
+              <span><strong>Aguardando pagamento</strong> — libera automaticamente na confirmação</span>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
