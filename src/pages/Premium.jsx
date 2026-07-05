@@ -35,7 +35,8 @@ const S = `
 
 /* Modal */
 .pm-overlay { position:fixed; inset:0; background:rgba(5,8,13,.8); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:500; padding:16px; }
-.pm-modal { background:#0f1520; border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:28px; width:100%; max-width:420px; max-height:92vh; overflow-y:auto; }
+.pm-modal { background:#0f1520; border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:24px; width:100%; max-width:420px; max-height:92vh; overflow-y:auto; }
+@media (max-width:480px) { .pm-modal { padding:18px; border-radius:16px; } .pm-modal h3 { font-size:18px; margin-bottom:12px; } .pm-modal-pix .pm-valor strong { font-size:28px; } .pm-qr-wrap img { width:170px; height:170px; } }
 .pm-modal h3 { font-family:var(--font-display); font-size:20px; font-weight:800; color:#f0f4ff; margin:0 0 18px; }
 .pm-campo { margin-bottom:12px; }
 .pm-campo label { display:block; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#9aabc7; margin-bottom:6px; }
@@ -314,7 +315,7 @@ export default function Premium() {
           existe valor estatístico, com o raciocínio completo, não uma "dica" solta.
         </p>
 
-        <div className="pm-beneficios">
+        <div className="pm-beneficios stagger">
           {BENEFICIOS.map(b => (
             <div className="pm-b" key={b.titulo}>
               <div className="pm-b-icone">{b.icone}</div>
@@ -332,7 +333,7 @@ export default function Premium() {
           </button>
         </div>
 
-        <div className="pm-como">
+        <div className="pm-como stagger">
           <div className="pm-como-titulo">Como funciona</div>
           {PASSOS.map((t, i) => (
             <div className="pm-passo" key={i}>

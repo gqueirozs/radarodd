@@ -7,6 +7,7 @@ import Analisador from './pages/Analisador';
 import Chaveamento from './pages/Chaveamento';
 import Premium from './pages/Premium';
 import { SkelCard } from './components/Skeleton';
+import PageTransition from './components/PageTransition';
 import { AuthProvider } from './auth/AuthContext';
 import { fetchJogos, fetchStatus } from './data/api';
 
@@ -78,13 +79,15 @@ function AppRotas() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav page={page} setPage={setPage} apiStatus={apiStatus} ultimaAtualizacao={ultimaAtualizacao} />
-      <Routes>
-        <Route path="/" element={<Home onSelectJogo={abrirPartida} jogos={jogos} apiStatus={apiStatus} />} />
-        <Route path="/mata-mata" element={<Chaveamento jogos={jogos} onSelectJogo={abrirPartida} />} />
-        <Route path="/premium" element={<Premium />} />
-        <Route path="/partida/:id" element={<PaginaPartida jogos={jogos} apiStatus={apiStatus} />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <PageTransition>
+        <Routes>
+          <Route path="/" element={<Home onSelectJogo={abrirPartida} jogos={jogos} apiStatus={apiStatus} />} />
+          <Route path="/mata-mata" element={<Chaveamento jogos={jogos} onSelectJogo={abrirPartida} />} />
+          <Route path="/premium" element={<Premium />} />
+          <Route path="/partida/:id" element={<PaginaPartida jogos={jogos} apiStatus={apiStatus} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </PageTransition>
       <Footer />
     </div>
   );

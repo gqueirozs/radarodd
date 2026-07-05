@@ -226,10 +226,10 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
             {/* Final e 3º lugar em destaque */}
             {(faseAtiva === 'todas' || faseAtiva === 'final') && (
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 8 }}>
-                <div style={{ flex: 1, minWidth: 260 }}>
+                <div style={{ flex: 1, minWidth: 220 }}>
                   <CardFinal jogo={fases.final?.[0]} label="Grande final" emoji="🏆" />
                 </div>
-                <div style={{ flex: 1, minWidth: 260 }}>
+                <div style={{ flex: 1, minWidth: 220 }}>
                   <CardFinal jogo={fases.terceiro?.[0]} label="Terceiro lugar" emoji="🥉" cor="#ffb830" />
                 </div>
               </div>
