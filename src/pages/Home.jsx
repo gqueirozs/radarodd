@@ -208,7 +208,7 @@ function probReal(odd) {
   return Math.min(99, Math.round(real * 100));
 }
 
-function CardJogo({ jogo, isMob, onClick }) {
+function CardJogo({ jogo, isMob, assinante, onClick }) {
   const o   = jogo.odds || {};
 
   const encerrado = jogo.statusReal === 'encerrado';
@@ -478,7 +478,7 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
               <HeaderDia grupo={g}/>
               <div className="hcards">
                 {g.jogos.map(j => (
-                  <CardJogo key={j.id} jogo={j} isMob={isMob} onClick={()=>onSelectJogo(j)}/>
+                  <CardJogo key={j.id} jogo={j} isMob={isMob} assinante={assinante} onClick={()=>onSelectJogo(j)}/>
                 ))}
               </div>
             </div>
