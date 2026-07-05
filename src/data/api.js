@@ -1,8 +1,15 @@
-const API_URL = process.env.REACT_APP_API_URL || 'https://radarodd-api-production.up.railway.app';
+export const API_URL = process.env.REACT_APP_API_URL || 'https://radarodd-api-production.up.railway.app';
+
+function authHeaders() {
+  try {
+    const t = localStorage.getItem('sinalodds_token');
+    return t ? { Authorization: `Bearer ${t}` } : {};
+  } catch { return {}; }
+}
 
 export async function fetchJogos() {
   try {
-    const res = await fetch(`${API_URL}/api/jogos`);
+    const res = await fetch(`${API_URL}/api/jogos`, { headers: authHeaders() });
     if (!res.ok) throw new Error('API indisponível');
     const data = await res.json();
     if (data.ok && data.jogos?.length > 0) return data.jogos;
@@ -48,7 +55,7 @@ export async function fetchValueBets() {
 export async function fetchConfronto(casa, fora) {
   try {
     const qs = new URLSearchParams({ casa, fora }).toString();
-    const res = await fetch(`${API_URL}/api/confronto?${qs}`);
+    const res = await fetch(`${API_URL}/api/confronto?${qs}`, { headers: authHeaders() });
     const data = await res.json();
     return data.ok ? data : null;
   } catch (err) {
@@ -81,10 +88,28 @@ export async function fetchEvento(eventoId, liga = 'fifa.world') {
 
 export async function fetchAnalise(idJogo) {
   try {
-    const res = await fetch(`${API_URL}/api/analise/${encodeURIComponent(idJogo)}`);
+    const res = await fetch(`${API_URL}/api/analise/${encodeURIComponent(idJogo)}`, { headers: authHeaders() });
     return await res.json();
   } catch (err) {
     console.warn('Erro ao buscar análise:', err.message);
     return null;
   }
+}
+
+
+/* ── Assinatura (PIX via Hoopay) ─────────────────────────────────── */
+export async function criarAssinaturaPix(documento, telefone) {
+  const res = await fetch(`${API_URL}/api/assinatura/pix`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ documento, telefone }),
+  });
+  return res.json();
+}
+
+export async function consultarPagamento(orderUUID) {
+  const res = await fetch(`${API_URL}/api/assinatura/status/${encodeURIComponent(orderUUID)}`, {
+    headers: authHeaders(),
+  });
+  return res.json();
 }

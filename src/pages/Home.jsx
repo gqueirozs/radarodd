@@ -270,6 +270,11 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
               {sinaisExibidos.length} sinal{sinaisExibidos.length>1?'is':''}
             </span>
           )}
+          {!encerrado && !aoVivo && !temSinais && jogo.sinaisBloqueados > 0 && (
+            <span style={{ fontSize:10, color:'#ffb830', fontWeight:700, background:'rgba(255,184,48,.08)', border:'1px solid rgba(255,184,48,.25)', padding:'2px 8px', borderRadius:20 }}>
+              🔒 {jogo.sinaisBloqueados} sinal{jogo.sinaisBloqueados>1?'is':''} premium
+            </span>
+          )}
         </div>
 
         {/* Times */}

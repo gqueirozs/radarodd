@@ -5,6 +5,8 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Analisador from './pages/Analisador';
 import Chaveamento from './pages/Chaveamento';
+import Premium from './pages/Premium';
+import { AuthProvider } from './auth/AuthContext';
 import { fetchJogos, fetchStatus } from './data/api';
 
 /* Rota /partida/:id — encontra o jogo pelo id da URL */
@@ -73,6 +75,7 @@ function AppRotas() {
       <Routes>
         <Route path="/" element={<Home onSelectJogo={abrirPartida} jogos={jogos} apiStatus={apiStatus} />} />
         <Route path="/mata-mata" element={<Chaveamento jogos={jogos} onSelectJogo={abrirPartida} />} />
+        <Route path="/premium" element={<Premium />} />
         <Route path="/partida/:id" element={<PaginaPartida jogos={jogos} apiStatus={apiStatus} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -84,7 +87,9 @@ function AppRotas() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppRotas />
+      <AuthProvider>
+        <AppRotas />
+      </AuthProvider>
     </BrowserRouter>
   );
 }

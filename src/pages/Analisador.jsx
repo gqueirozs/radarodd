@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 import { getLogo } from '../data/statsDB';
 import { fetchConfronto, fetchEvento, fetchAnalise } from '../data/api';
 
@@ -294,6 +296,8 @@ function ColunaEscalacao({ titulo, esc, cor }) {
 }
 
 export default function Analisador({ jogo, onVoltar }) {
+  const { assinante } = useAuth();
+  const navigate = useNavigate();
   const [aba, setAba] = useState('sugestoes');
   const [conf, setConf] = useState(null);         // dados reais (ESPN)
   const [confStatus, setConfStatus] = useState('carregando'); // carregando | ok | erro
@@ -541,7 +545,24 @@ export default function Analisador({ jogo, onVoltar }) {
           </div>
         )}
 
-        {!(aoVivoA || encerA) && aba==='sugestoes' && (
+        {!assinante && (aba==='sugestoes' || aba==='estatisticas') && (
+          <div style={{ textAlign:'center', padding:'40px 24px', background:'linear-gradient(135deg, rgba(0,229,160,.05), rgba(77,159,255,.04))', border:'1.5px solid rgba(0,229,160,.25)', borderRadius:18 }}>
+            <div style={{ fontSize:34, marginBottom:12 }}>🔒</div>
+            <div style={{ fontFamily:'var(--font-display)', fontSize:19, fontWeight:800, color:'var(--text, #f0f4ff)', marginBottom:8 }}>
+              Análise exclusiva para assinantes
+            </div>
+            <div style={{ fontSize:13, color:'var(--text2, #c6d1e6)', lineHeight:1.7, maxWidth:420, margin:'0 auto 20px' }}>
+              Sinais com valor estatístico real, confronto direto, histórico das equipes
+              e a evidência completa por trás de cada análise — por R$ 9,99/mês.
+            </div>
+            <button onClick={() => navigate('/premium')}
+              style={{ padding:'13px 32px', borderRadius:12, border:'none', background:'#00e5a0', color:'#000', fontSize:14, fontWeight:800, cursor:'pointer' }}>
+              Conhecer o Premium
+            </button>
+          </div>
+        )}
+
+        {assinante && !(aoVivoA || encerA) && aba==='sugestoes' && (
           <div>
             {analiseStatus === 'carregando' && (
               <div style={{ textAlign:'center', padding:'40px 0', color:'var(--text3, #9aabc7)', fontSize:13 }}>
@@ -635,7 +656,7 @@ export default function Analisador({ jogo, onVoltar }) {
         )}
 
         {/* ── ESTATÍSTICAS ── */}
-        {aba==='estatisticas' && (
+        {assinante && aba==='estatisticas' && (
           <div>
             {/* Dados reais — ESPN */}
             {confStatus === 'carregando' && (

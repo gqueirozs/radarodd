@@ -1,7 +1,12 @@
 import React from 'react';
 import Logo from './Logo';
 
+import { useAuth } from '../auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
 export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
+  const { usuario, assinante, sair } = useAuth();
+  const navigate = useNavigate();
   const s = {
     online:  { cor: '#00e5a0', texto: 'Ao vivo' },
     loading: { cor: '#ffb830', texto: 'Atualizando' },
@@ -84,6 +89,17 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
         </div>
 
         <div className="nav-status">
+          {assinante ? (
+            <button onClick={sair} title="Sair"
+              style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(0,229,160,.1)', border:'1px solid rgba(0,229,160,.25)', color:'#00e5a0', borderRadius:20, padding:'4px 12px', fontSize:11, fontWeight:800, letterSpacing:'.06em', cursor:'pointer', marginRight:8 }}>
+              ★ PREMIUM
+            </button>
+          ) : (
+            <button onClick={() => navigate('/premium')}
+              style={{ background:'#00e5a0', border:'none', color:'#000', borderRadius:20, padding:'5px 14px', fontSize:11.5, fontWeight:800, letterSpacing:'.04em', cursor:'pointer', marginRight:8 }}>
+              {usuario ? 'Assinar' : 'Premium'}
+            </button>
+          )}
           <div className="nav-dot" style={{ background:s.cor }}/>
           <span style={{ color:s.cor }}>{s.texto}</span>
           {hora && apiStatus==='online' && <span className="nav-hora" style={{ color:'#9aabc7', fontWeight:400 }}>{hora}</span>}
