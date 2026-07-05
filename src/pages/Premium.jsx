@@ -127,6 +127,39 @@ function ModalAuth({ aberto, aoFechar, aoAutenticar }) {
   );
 }
 
+/* Máscaras: só formata na exibição — envio ainda com dígitos crus */
+function mascararCPF(v) {
+  const d = (v || '').replace(/\D/g, '').slice(0, 11);
+  const p = [];
+  if (d.length > 0) p.push(d.slice(0, 3));
+  if (d.length > 3) p[p.length - 1] = d.slice(0, 3), p.push(d.slice(3, 6));
+  if (d.length > 6) p.push(d.slice(6, 9));
+  let out = d.slice(0, 3);
+  if (d.length > 3) out += '.' + d.slice(3, 6);
+  if (d.length > 6) out += '.' + d.slice(6, 9);
+  if (d.length > 9) out += '-' + d.slice(9, 11);
+  return out;
+}
+function mascararTelefone(v) {
+  const d = (v || '').replace(/\D/g, '').slice(0, 11);
+  if (d.length === 0) return '';
+  if (d.length <= 2) return `(${d}`;
+  if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+function cpfValido(cpf) {
+  const c = (cpf || '').replace(/\D/g, '');
+  if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+  const dv = pos => {
+    let s = 0;
+    for (let i = 0; i < pos - 1; i++) s += parseInt(c[i], 10) * (pos - i);
+    const r = (s * 10) % 11;
+    return (r === 10 ? 0 : r) === parseInt(c[pos - 1], 10);
+  };
+  return dv(10) && dv(11);
+}
+
 function ModalPix({ aberto, aoFechar }) {
   const { setUsuario } = useAuth();
   const [documento, setDocumento] = useState('');
@@ -142,9 +175,14 @@ function ModalPix({ aberto, aoFechar }) {
   if (!aberto) return null;
 
   const gerar = async () => {
-    setErro(''); setEnviando(true);
+    setErro('');
+    const cpfLimpo = documento.replace(/\D/g, '');
+    const telLimpo = telefone.replace(/\D/g, '');
+    if (!cpfValido(cpfLimpo)) { setErro('CPF inválido — confira os dígitos.'); return; }
+    if (telLimpo.length < 10)  { setErro('Telefone incompleto — inclua DDD e número.'); return; }
+    setEnviando(true);
     try {
-      const r = await criarAssinaturaPix(documento, telefone);
+      const r = await criarAssinaturaPix(cpfLimpo, telLimpo);
       if (!r.ok) throw new Error(r.mensagem || 'Não foi possível gerar o PIX');
       setCobranca(r);
       pollRef.current = setInterval(async () => {
@@ -189,11 +227,11 @@ function ModalPix({ aberto, aoFechar }) {
             {erro && <div className="pm-erro">{erro}</div>}
             <div className="pm-campo">
               <label>CPF (exigido pelo pagamento)</label>
-              <input value={documento} onChange={e => setDocumento(e.target.value)} placeholder="000.000.000-00" inputMode="numeric" />
+              <input value={documento} onChange={e => setDocumento(mascararCPF(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" maxLength={14} autoComplete="off" />
             </div>
             <div className="pm-campo">
               <label>Telefone</label>
-              <input value={telefone} onChange={e => setTelefone(e.target.value)} placeholder="(11) 99999-9999" inputMode="tel" />
+              <input value={telefone} onChange={e => setTelefone(mascararTelefone(e.target.value))} placeholder="(11) 99999-9999" inputMode="tel" maxLength={15} autoComplete="tel" />
             </div>
             <button className="pm-cta" style={{ maxWidth:'100%', marginTop:6 }} disabled={enviando} onClick={gerar}>
               {enviando ? 'Gerando PIX…' : 'Gerar PIX de R$ 9,99'}
