@@ -73,10 +73,7 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
       <nav className="nav">
         <button className="nav-logo" onClick={() => setPage('home')}>
           <Logo size={32} />
-          <div>
-            <div className="nav-logo-text">Sinal<span>Odds</span></div>
-            <div className="nav-logo-domain">sinalodds.com.br</div>
-          </div>
+          <div className="nav-logo-text">Sinal<span>Odds</span></div>
         </button>
 
         <div className="nav-links">
