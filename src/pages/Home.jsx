@@ -7,22 +7,6 @@ import { useIsMobile } from '../hooks/useIsMobile';
    MODERADO    → EV > 5%  = padrão
    ARROJADO    → EV > 0%  + odd alta (>3.0) = maior risco, retorno maior
 */
-const PERFIS = {
-  conservador: { label: 'Conservador', emoji: '🛡️', desc: 'Odds baixas, mais seguro', evMin: 5,  oddMax: 2.5,  oddMin: 0   },
-  moderado:    { label: 'Moderado',    emoji: '⚖️', desc: 'Equilíbrio risco/retorno', evMin: 5,  oddMax: 99,   oddMin: 0   },
-  arrojado:    { label: 'Arrojado',    emoji: '🔥', desc: 'Odds altas, maior retorno', evMin: 3, oddMax: 99,   oddMin: 2.5 },
-};
-
-function filtraParaPerfil(vbs, perfil) {
-  const p = PERFIS[perfil];
-  return vbs.filter(v => {
-    if (v.ev < p.evMin) return false;
-    if (perfil === 'conservador' && v.odd > p.oddMax) return false;
-    if (perfil === 'arrojado'    && v.odd < p.oddMin) return false;
-    return true;
-  });
-}
-
 const S = `
 .hw { max-width: 860px; margin: 0 auto; padding: 28px 16px 56px; }
 .hbadges { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -48,19 +32,13 @@ const S = `
 .hfilter-data.on .hfd-x:hover { background: rgba(0,0,0,.45); }
 
 /* Perfis */
-.hperfis { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-.hperfil {
   flex: 1; min-width: 100px; padding: 10px 14px; border-radius: 12px; cursor: pointer;
   border: 1.5px solid rgba(255,255,255,.07); background: #0f1520;
   transition: all .2s; text-align: center;
 }
-.hperfil.on {
   border-color: #00e5a0;
   background: rgba(0,229,160,.07);
 }
-.hperfil-emoji { font-size: 18px; margin-bottom: 4px; }
-.hperfil-nome  { font-size: 12px; font-weight: 700; color: #f0f4ff; }
-.hperfil-desc  { font-size: 10px; color: #9aabc7; margin-top: 2px; }
 
 @keyframes hpulse { 0%,100%{ opacity:1 } 50%{ opacity:.55 } }
 .hlive { animation: hpulse 1.6s infinite; }
@@ -127,9 +105,7 @@ const S = `
   .hw { padding: 20px 12px 48px; }
   .hdia-num { font-size: 22px; }
   .hdia { gap: 10px; }
-  .hperfis { gap: 6px; }
-  .hperfil { padding: 9px 10px; min-width: 80px; }
-  .hbody { padding: 12px 12px; }
+      .hbody { padding: 12px 12px; }
   .hfooter-card { padding: 9px 12px 12px; }
 }
 `;
@@ -232,7 +208,7 @@ function probReal(odd) {
   return Math.min(99, Math.round(real * 100));
 }
 
-function CardJogo({ jogo, perfil, isMob, onClick }) {
+function CardJogo({ jogo, isMob, onClick }) {
   const o   = jogo.odds || {};
 
   const encerrado = jogo.statusReal === 'encerrado';
@@ -240,8 +216,7 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
 
   // Sinais só no pré-jogo: rolando ou encerrado, as odds base já venceram
   const todosVbs  = (encerrado || aoVivo) ? [] : (jogo.valueBets || []).filter(v => v.ev > 0).sort((a,b)=>b.ev-a.ev);
-  const sinaisFiltrados = filtraParaPerfil(todosVbs, perfil);
-  const sinaisExibidos  = sinaisFiltrados.slice(0, isMob ? 2 : 3);
+  const sinaisExibidos  = todosVbs.slice(0, isMob ? 2 : 3);
   const temSinais = sinaisExibidos.length > 0;
   const tamanhoFlag = isMob ? 32 : 42;
 
@@ -390,7 +365,6 @@ function CardJogo({ jogo, perfil, isMob, onClick }) {
 export default function Home({ onSelectJogo, jogos: jogosProp }) {
   const [filtro, setFiltro]   = useState('todos');
   const [dataSel, setDataSel] = useState('');   // 'yyyy-mm-dd' do seletor de data
-  const [perfil, setPerfil]   = useState('moderado');
   const [mostrarFuturos, setMostrarFuturos] = useState(false);
   const isMob = useIsMobile(640);
   const hoje  = new Date().toLocaleDateString('pt-BR');
@@ -415,9 +389,9 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
       filtro==='aovivo' ? j.statusReal==='ao-vivo' :
       true)
     .sort((a,b) => {
-      // Ordenar por quantidade de sinais para o perfil selecionado
-      const sA = filtraParaPerfil((a.valueBets||[]).filter(v=>v.ev>0), perfil).length;
-      const sB = filtraParaPerfil((b.valueBets||[]).filter(v=>v.ev>0), perfil).length;
+      // Ordenar por quantidade de sinais com valor
+      const sA = (a.valueBets||[]).filter(v=>v.ev>0).length;
+      const sB = (b.valueBets||[]).filter(v=>v.ev>0).length;
       if (sB !== sA) return sB - sA;
       const evA = Math.max(...(a.valueBets||[]).map(v=>v.ev||0), 0);
       const evB = Math.max(...(b.valueBets||[]).map(v=>v.ev||0), 0);
@@ -440,11 +414,11 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
           </h1>
           <p className="hsub">
             Cada aposta sugerida tem probabilidade real estimada e valor esperado calculado.
-            Escolha seu perfil e veja os melhores sinais.
+            Análises baseadas na frequência real dos eventos.
           </p>
         </div>
 
-        {/* Filtros de data + perfil */}
+        {/* Filtros de data */}
         <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:20 }}>
           <div className="hfilters">
             {[['todos','Todos'],['ontem','Ontem'],['hoje','Hoje'],['amanhã','Amanhã']].map(([v,l])=>(
@@ -480,16 +454,6 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
             </label>
           </div>
 
-          {/* Seletor de perfil */}
-          <div className="hperfis">
-            {Object.entries(PERFIS).map(([key, p]) => (
-              <button key={key} className={`hperfil${perfil===key?' on':''}`} onClick={()=>setPerfil(key)}>
-                <div className="hperfil-emoji">{p.emoji}</div>
-                <div className="hperfil-nome" style={{ color: perfil===key ? '#00e5a0' : '#f0f4ff' }}>{p.label}</div>
-                <div className="hperfil-desc">{p.desc}</div>
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Timeline agrupada por dia */}
@@ -514,7 +478,7 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
               <HeaderDia grupo={g}/>
               <div className="hcards">
                 {g.jogos.map(j => (
-                  <CardJogo key={j.id} jogo={j} perfil={perfil} isMob={isMob} onClick={()=>onSelectJogo(j)}/>
+                  <CardJogo key={j.id} jogo={j} isMob={isMob} onClick={()=>onSelectJogo(j)}/>
                 ))}
               </div>
             </div>
