@@ -330,6 +330,7 @@ export default function Analisador({ jogo, onVoltar }) {
     fetchAnalise(jogo.id).then(d => {
       if (!ativo) return;
       if (d?.ok) { setAnalise(d); setAnaliseStatus('ok'); }
+      else if (d?.jogoIniciado) setAnaliseStatus('iniciado');
       else setAnaliseStatus(d?.mensagem || 'erro');
     });
     let timer = null;
@@ -545,7 +546,23 @@ export default function Analisador({ jogo, onVoltar }) {
           </div>
         )}
 
-        {!assinante && (aba==='sugestoes' || aba==='estatisticas') && (() => {
+        {!assinante && (aba==='sugestoes' || aba==='estatisticas') && analiseStatus === 'iniciado' && (
+          <div style={{ background:'#0f1520', border:'1px solid rgba(255,255,255,.07)', borderRadius:16, padding:'22px 20px', textAlign:'center' }}>
+            <div style={{ fontFamily:'var(--font-display)', fontSize:17, fontWeight:800, color:'var(--text,#f0f4ff)', marginBottom:8 }}>
+              Este jogo já começou
+            </div>
+            <div style={{ fontSize:13, color:'var(--text2,#c6d1e6)', lineHeight:1.7, maxWidth:400, margin:'0 auto 18px' }}>
+              Sinais e sugestões só valem <strong>antes da bola rolar</strong> — odds e cenário mudam com a partida em andamento.
+              Assine para acessar as análises dos próximos jogos.
+            </div>
+            <button onClick={() => navigate('/premium')}
+              style={{ padding:'12px 28px', borderRadius:12, border:'none', background:'#00e5a0', color:'#000', fontSize:13.5, fontWeight:800, cursor:'pointer' }}>
+              Ver planos
+            </button>
+          </div>
+        )}
+
+        {!assinante && (aba==='sugestoes' || aba==='estatisticas') && analiseStatus !== 'iniciado' && (() => {
           const t = analise?.teaser ? analise : null;
           const Dot = ({ r }) => (
             <span style={{ width:20, height:20, borderRadius:'50%', display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:800,
@@ -597,7 +614,7 @@ export default function Analisador({ jogo, onVoltar }) {
                   {t.mercadosPrevia.slice(0,6).map((m,i) => (
                     <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'11px 14px', background:'#0f1520', border:'1px solid rgba(255,255,255,.06)', borderRadius:12, marginBottom:6 }}>
                       <span style={{ fontSize:9, fontWeight:800, letterSpacing:'.08em', color:CorNivel[m.nivel], background:`${CorNivel[m.nivel]}18`, border:`1px solid ${CorNivel[m.nivel]}30`, padding:'3px 8px', borderRadius:20, whiteSpace:'nowrap' }}>{RotNivel[m.nivel]}</span>
-                      <span style={{ fontSize:13, fontWeight:700, color:'var(--text,#f0f4ff)', flex:1 }}>{m.mercado}</span>
+                      <span style={{ fontSize:13, fontWeight:700, color:'var(--text,#f0f4ff)', flex:1 }}>{m.categoria}</span>
                       <span style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color:'var(--text3,#9aabc7)', filter:'blur(5px)', userSelect:'none' }}>0.00</span>
                       <span style={{ fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, color:'var(--text3,#9aabc7)', filter:'blur(5px)', userSelect:'none' }}>+0.0% EV</span>
                     </div>
