@@ -321,8 +321,8 @@ function CardJogo({ jogo, isMob, onClick }) {
           );
         })()}
 
-        {/* Barra prob */}
-        <ProbBar oddC={o.resultado?.casa} oddF={o.resultado?.fora} oddE={o.resultado?.empate}/>
+        {/* Barra prob: escondida pra não assinante em pré-jogo (é dica) */}
+        {(assinante || encerrado || aoVivo) && <ProbBar oddC={o.resultado?.casa} oddF={o.resultado?.fora} oddE={o.resultado?.empate}/>}
 
         {/* Sinais */}
         {temSinais && (
