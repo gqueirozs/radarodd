@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { getLogo } from '../data/statsDB';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuth } from '../auth/AuthContext';
+import { SkelCard } from '../components/Skeleton';
 
 /* ─── Perfil de apostador ───────────────────────────────────────────
    CONSERVADOR → EV > 8% + odd baixa (<2.5) = menor risco, retorno menor
@@ -459,9 +460,14 @@ export default function Home({ onSelectJogo, jogos: jogosProp }) {
         </div>
 
         {/* Timeline agrupada por dia */}
-        {JOGOS.length===0 && (
+        {JOGOS.length===0 && (jogosProp||[]).length===0 && (
+          <div className="sk-fade-in">
+            <SkelCard/><SkelCard/><SkelCard/>
+          </div>
+        )}
+        {JOGOS.length===0 && (jogosProp||[]).length>0 && (
           <div style={{ textAlign:'center', padding:'48px 0', color:'#9aabc7', fontSize:14 }}>
-            Nenhum jogo encontrado.
+            Nenhum jogo encontrado com esse filtro.
           </div>
         )}
         {(() => {

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { getLogo } from '../data/statsDB';
 import { fetchConfronto, fetchEvento, fetchAnalise } from '../data/api';
+import { SkelTeaser, SkelCard } from '../components/Skeleton';
 
 const STYLES = `
 .ana-wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 48px; }
@@ -562,12 +563,16 @@ export default function Analisador({ jogo, onVoltar }) {
           </div>
         )}
 
-        {!assinante && (aba==='sugestoes' || aba==='estatisticas') && analiseStatus !== 'iniciado' && (() => {
+        {!assinante && (aba==='sugestoes' || aba==='estatisticas') && analiseStatus === 'carregando' && (
+          <SkelTeaser/>
+        )}
+
+        {!assinante && (aba==='sugestoes' || aba==='estatisticas') && analiseStatus !== 'iniciado' && analiseStatus !== 'carregando' && (() => {
           const t = analise?.teaser ? analise : null;
           const temValor = t?.resumo?.mercadosComValor > 0;
 
           return (
-            <div style={{ background:'linear-gradient(135deg, rgba(0,229,160,.08), rgba(77,159,255,.04))', border:'1.5px solid rgba(0,229,160,.28)', borderRadius:18, padding:'32px 24px', textAlign:'center' }}>
+            <div className='sk-fade-in' style={{ background:'linear-gradient(135deg, rgba(0,229,160,.08), rgba(77,159,255,.04))', border:'1.5px solid rgba(0,229,160,.28)', borderRadius:18, padding:'32px 24px', textAlign:'center' }}>
               <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(0,229,160,.12)', border:'1px solid rgba(0,229,160,.28)', borderRadius:20, padding:'4px 12px', fontSize:10, fontWeight:800, letterSpacing:'.12em', color:'#00e5a0', marginBottom:18 }}>
                 ★ EXCLUSIVO PARA ASSINANTES
               </div>
@@ -701,8 +706,10 @@ export default function Analisador({ jogo, onVoltar }) {
           <div>
             {/* Dados reais — ESPN */}
             {confStatus === 'carregando' && (
-              <div style={{ textAlign:'center', padding:'28px 0', color:'var(--text3, #9aabc7)', fontSize:13 }}>
-                Buscando resultados reais das seleções…
+              <div className="sk-fade-in" style={{ marginBottom: 20 }}>
+                <div style={{ marginBottom: 12 }}><span className="sk" style={{ width: 220, height: 12, borderRadius: 6, display: 'inline-block' }}/></div>
+                <SkelCard/>
+                <SkelCard/>
               </div>
             )}
 

@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Analisador from './pages/Analisador';
 import Chaveamento from './pages/Chaveamento';
 import Premium from './pages/Premium';
+import { SkelCard } from './components/Skeleton';
 import { AuthProvider } from './auth/AuthContext';
 import { fetchJogos, fetchStatus } from './data/api';
 
@@ -19,8 +20,13 @@ function PaginaPartida({ jogos, apiStatus }) {
     // Dados ainda carregando: espera; carregado e não achou: volta pra home
     if (apiStatus === 'loading') {
       return (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: '#9aabc7', fontSize: 14 }}>
-          Carregando partida…
+        <div style={{ maxWidth: 780, margin: '0 auto', padding: '24px 16px' }}>
+          <SkelCard />
+          <div style={{ marginTop: 20 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+              {[80, 100, 90, 110].map((w,i) => <span key={i} className="sk" style={{ width: w, height: 34, borderRadius: 10, display: 'inline-block' }}/>)}
+            </div>
+          </div>
         </div>
       );
     }
