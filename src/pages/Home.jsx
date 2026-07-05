@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { getLogo } from '../data/statsDB';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useAuth } from '../auth/AuthContext';
 
 /* ─── Perfil de apostador ───────────────────────────────────────────
    CONSERVADOR → EV > 8% + odd baixa (<2.5) = menor risco, retorno menor
@@ -363,6 +364,7 @@ function CardJogo({ jogo, isMob, assinante, onClick }) {
 }
 
 export default function Home({ onSelectJogo, jogos: jogosProp }) {
+  const { assinante } = useAuth();
   const [filtro, setFiltro]   = useState('todos');
   const [dataSel, setDataSel] = useState('');   // 'yyyy-mm-dd' do seletor de data
   const [mostrarFuturos, setMostrarFuturos] = useState(false);
