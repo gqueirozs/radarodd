@@ -545,22 +545,119 @@ export default function Analisador({ jogo, onVoltar }) {
           </div>
         )}
 
-        {!assinante && (aba==='sugestoes' || aba==='estatisticas') && (
-          <div style={{ textAlign:'center', padding:'40px 24px', background:'linear-gradient(135deg, rgba(0,229,160,.05), rgba(77,159,255,.04))', border:'1.5px solid rgba(0,229,160,.25)', borderRadius:18 }}>
-            <div style={{ fontSize:34, marginBottom:12 }}>🔒</div>
-            <div style={{ fontFamily:'var(--font-display)', fontSize:19, fontWeight:800, color:'var(--text, #f0f4ff)', marginBottom:8 }}>
-              Análise exclusiva para assinantes
-            </div>
-            <div style={{ fontSize:13, color:'var(--text2, #c6d1e6)', lineHeight:1.7, maxWidth:420, margin:'0 auto 20px' }}>
-              Sinais com valor estatístico real, confronto direto, histórico das equipes
-              e a evidência completa por trás de cada análise — por R$ 9,99/mês.
-            </div>
-            <button onClick={() => navigate('/premium')}
-              style={{ padding:'13px 32px', borderRadius:12, border:'none', background:'#00e5a0', color:'#000', fontSize:14, fontWeight:800, cursor:'pointer' }}>
-              Conhecer o Premium
-            </button>
-          </div>
-        )}
+        {!assinante && (aba==='sugestoes' || aba==='estatisticas') && (() => {
+          const t = analise?.teaser ? analise : null;
+          const Dot = ({ r }) => (
+            <span style={{ width:20, height:20, borderRadius:'50%', display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:800,
+              color: r==='V' ? '#000' : '#fff',
+              background: r==='V' ? '#00e5a0' : r==='E' ? '#3a4356' : '#ff4d6d' }}>{r}</span>
+          );
+          const CorNivel = { forte:'#00e5a0', valor:'#4d9fff', neutro:'#9aabc7', evitar:'#ff4d6d' };
+          const RotNivel = { forte:'VALOR FORTE', valor:'VALOR', neutro:'NEUTRO', evitar:'SEM VALOR' };
+
+          return (
+            <>
+              {/* Prova de que a análise já rodou pra este jogo */}
+              {t?.resumo && (
+                <div style={{ marginBottom:14 }}>
+                  {t.resumo.mercadosComValor > 0 ? (
+                    <div style={{ background:'linear-gradient(135deg, rgba(0,229,160,.09), rgba(77,159,255,.05))', border:'1px solid rgba(0,229,160,.3)', borderRadius:16, padding:'18px 20px' }}>
+                      <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:6, flexWrap:'wrap' }}>
+                        <span style={{ fontSize:11, fontWeight:800, letterSpacing:'.1em', color:'#00e5a0' }}>ANÁLISE DESTE JOGO</span>
+                        <span style={{ fontSize:10, color:'var(--text3,#9aabc7)' }}>· concluída</span>
+                      </div>
+                      <div style={{ fontFamily:'var(--font-display)', fontSize:19, fontWeight:800, color:'var(--text,#f0f4ff)', lineHeight:1.35, marginBottom:10 }}>
+                        Identificamos <span style={{ color:'#00e5a0' }}>{t.resumo.mercadosComValor} {t.resumo.mercadosComValor===1?'mercado':'mercados'} com valor</span>
+                        {t.resumo.forte > 0 && <> — {t.resumo.forte} classificado como <span style={{ color:'#00e5a0' }}>valor forte</span></>}.
+                      </div>
+                      <div style={{ display:'flex', gap:18, fontSize:12, color:'var(--text2,#c6d1e6)', flexWrap:'wrap' }}>
+                        <span>EV médio: <strong style={{ fontFamily:'var(--font-mono)', color:'#00e5a0' }}>+{t.resumo.evMedio.toFixed(1)}%</strong></span>
+                        <span>Base: <strong>{t.base.jogosAnalisados} jogos recentes</strong></span>
+                        {t.base.confrontosDiretos > 0 && <span>+ <strong>{t.base.confrontosDiretos}</strong> confronto{t.base.confrontosDiretos>1?'s':''} direto{t.base.confrontosDiretos>1?'s':''}</span>}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ background:'#0f1520', border:'1px solid rgba(255,255,255,.07)', borderRadius:16, padding:'16px 20px' }}>
+                      <div style={{ fontSize:11, fontWeight:800, letterSpacing:'.1em', color:'var(--text2,#c6d1e6)', marginBottom:6 }}>ANÁLISE DESTE JOGO</div>
+                      <div style={{ fontSize:14, color:'var(--text,#f0f4ff)', lineHeight:1.5 }}>
+                        As odds deste jogo estão alinhadas com a frequência real dos eventos —
+                        <strong> nenhum valor estatístico foi identificado.</strong>
+                      </div>
+                      <div style={{ fontSize:11, color:'var(--text3,#9aabc7)', marginTop:6 }}>
+                        Analisamos <strong>{t.resumo.mercadosAnalisados} mercados</strong> — não apostar também é uma decisão de valor.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Prévia dos mercados com o rótulo desfocado (revela ao assinar) */}
+              {t?.mercadosPrevia?.length > 0 && (
+                <div style={{ marginBottom:14 }}>
+                  {t.mercadosPrevia.slice(0,6).map((m,i) => (
+                    <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'11px 14px', background:'#0f1520', border:'1px solid rgba(255,255,255,.06)', borderRadius:12, marginBottom:6 }}>
+                      <span style={{ fontSize:9, fontWeight:800, letterSpacing:'.08em', color:CorNivel[m.nivel], background:`${CorNivel[m.nivel]}18`, border:`1px solid ${CorNivel[m.nivel]}30`, padding:'3px 8px', borderRadius:20, whiteSpace:'nowrap' }}>{RotNivel[m.nivel]}</span>
+                      <span style={{ fontSize:13, fontWeight:700, color:'var(--text,#f0f4ff)', flex:1 }}>{m.mercado}</span>
+                      <span style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color:'var(--text3,#9aabc7)', filter:'blur(5px)', userSelect:'none' }}>0.00</span>
+                      <span style={{ fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, color:'var(--text3,#9aabc7)', filter:'blur(5px)', userSelect:'none' }}>+0.0% EV</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Confronto direto + forma recente: prova adicional */}
+              {t?.confrontoDireto && (
+                <div style={{ background:'#0f1520', border:'1px solid rgba(255,255,255,.07)', borderRadius:14, padding:'14px 16px', marginBottom:14 }}>
+                  <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', textTransform:'uppercase', color:'var(--text3,#9aabc7)', marginBottom:10, textAlign:'center' }}>Confronto direto</div>
+                  <div style={{ display:'flex', gap:8 }}>
+                    {[
+                      { v:t.confrontoDireto.vitoriasCasa, l:jogo.casa.nome, c:'#00e5a0' },
+                      { v:t.confrontoDireto.empates,      l:'Empates',      c:'#c6d1e6' },
+                      { v:t.confrontoDireto.vitoriasFora, l:jogo.fora.nome, c:'#4d9fff' },
+                    ].map(({v,l,c})=>(
+                      <div key={l} style={{ flex:1, textAlign:'center', background:'rgba(255,255,255,.02)', border:'1px solid rgba(255,255,255,.05)', borderRadius:10, padding:'10px 6px' }}>
+                        <div style={{ fontFamily:'var(--font-mono)', fontSize:22, fontWeight:700, color:c }}>{v}</div>
+                        <div style={{ fontSize:9, color:'var(--text3,#9aabc7)', marginTop:2 }}>{l}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(t?.formaCasa?.length > 0 || t?.formaFora?.length > 0) && (
+                <div style={{ background:'#0f1520', border:'1px solid rgba(255,255,255,.07)', borderRadius:14, padding:'12px 16px', marginBottom:20 }}>
+                  <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', textTransform:'uppercase', color:'var(--text3,#9aabc7)', marginBottom:10, textAlign:'center' }}>Forma recente</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:11, color:'var(--text2,#c6d1e6)', marginBottom:6 }}>{jogo.casa.nome}</div>
+                      <div style={{ display:'flex', gap:4 }}>{(t.formaCasa||[]).slice().reverse().map((r,i)=><Dot key={i} r={r}/>)}</div>
+                    </div>
+                    <div style={{ flex:1, textAlign:'right' }}>
+                      <div style={{ fontSize:11, color:'var(--text2,#c6d1e6)', marginBottom:6 }}>{jogo.fora.nome}</div>
+                      <div style={{ display:'flex', gap:4, justifyContent:'flex-end' }}>{(t.formaFora||[]).slice().reverse().map((r,i)=><Dot key={i} r={r}/>)}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* CTA final — vende sobre o que ele acabou de ver */}
+              <div style={{ background:'linear-gradient(135deg, rgba(0,229,160,.08), rgba(77,159,255,.05))', border:'1.5px solid rgba(0,229,160,.3)', borderRadius:18, padding:'22px 20px', textAlign:'center' }}>
+                <div style={{ fontFamily:'var(--font-display)', fontSize:18, fontWeight:800, color:'var(--text,#f0f4ff)', marginBottom:8, lineHeight:1.35 }}>
+                  {t?.resumo?.mercadosComValor > 0
+                    ? <>Veja qual{t.resumo.mercadosComValor>1?'is':''} mercado{t.resumo.mercadosComValor>1?'s têm':' tem'} valor,<br/>com odds, EV e a evidência completa</>
+                    : <>Análises completas de todos os jogos<br/>com odds, EV e evidência</>}
+                </div>
+                <div style={{ fontSize:12.5, color:'var(--text2,#c6d1e6)', lineHeight:1.65, marginBottom:16, maxWidth:400, margin:'0 auto 16px' }}>
+                  Estatísticas em tempo real, confronto direto detalhado, últimos jogos com goleadores e cartões, escalações — tudo por <strong style={{ color:'var(--text,#f0f4ff)' }}>R$ 9,99/mês</strong>, cancela quando quiser.
+                </div>
+                <button onClick={() => navigate('/premium')}
+                  style={{ padding:'14px 34px', borderRadius:12, border:'none', background:'#00e5a0', color:'#000', fontSize:14, fontWeight:800, cursor:'pointer', boxShadow:'0 8px 24px rgba(0,229,160,.2)' }}>
+                  Ver os sinais completos →
+                </button>
+              </div>
+            </>
+          );
+        })()}
 
         {assinante && !(aoVivoA || encerA) && aba==='sugestoes' && (
           <div>
