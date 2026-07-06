@@ -246,8 +246,8 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
                     <div className="brk-coluna-titulo">Quartas</div>
                     <div className="brk-coluna-titulo">Semifinal</div>
                   </div>
-                  <div className="brk-arvore" style={{ gridTemplateRows: 'repeat(8, minmax(0, auto))' }}>
-                    {/* Segunda rodada: 8 slots, 1 linha cada */}
+                  <div className="brk-arvore" style={{ gridTemplateRows: 'repeat(16, minmax(0, auto))' }}>
+                    {/* Segunda rodada: 16 slots, 1 linha cada */}
                     {chave.segunda.map((j, i) => (
                       <div key={`s${i}`} style={{ gridColumn: 1, gridRow: i + 1, display:'flex' }}>
                         {j
@@ -255,7 +255,7 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
                           : <div className="brk-jogo vazio" style={{ width:'100%' }}><div className="brk-jogo-meta">—</div></div>}
                       </div>
                     ))}
-                    {/* Oitavas: 4 slots, 2 linhas cada */}
+                    {/* Oitavas: 8 slots, 2 linhas cada */}
                     {chave.oitavas.map((j, i) => (
                       <div key={`o${i}`} style={{ gridColumn: 2, gridRow: `${i * 2 + 1} / span 2`, display:'flex', alignItems:'center' }}>
                         {j
@@ -263,7 +263,7 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
                           : <div className="brk-jogo vazio" style={{ width:'100%' }}><div className="brk-jogo-meta">A definir</div></div>}
                       </div>
                     ))}
-                    {/* Quartas: 2 slots, 4 linhas cada */}
+                    {/* Quartas: 4 slots, 4 linhas cada */}
                     {chave.quartas.map((j, i) => (
                       <div key={`q${i}`} style={{ gridColumn: 3, gridRow: `${i * 4 + 1} / span 4`, display:'flex', alignItems:'center' }}>
                         {j
@@ -271,12 +271,14 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
                           : <div className="brk-jogo vazio" style={{ width:'100%' }}><div className="brk-jogo-meta">A definir</div></div>}
                       </div>
                     ))}
-                    {/* Semifinal: 1 slot, 8 linhas */}
-                    <div style={{ gridColumn: 4, gridRow: '1 / span 8', display:'flex', alignItems:'center' }}>
-                      {chave.semi
-                        ? <CartaoJogo jogo={chave.semi} jogosApi={jogosApi} onClick={handleClick} />
-                        : <div className="brk-jogo vazio" style={{ width:'100%' }}><div className="brk-jogo-meta">A definir</div></div>}
-                    </div>
+                    {/* Semifinal: 2 slots, 8 linhas cada */}
+                    {(chave.semis || []).map((j, i) => (
+                      <div key={`sf${i}`} style={{ gridColumn: 4, gridRow: `${i * 8 + 1} / span 8`, display:'flex', alignItems:'center' }}>
+                        {j
+                          ? <CartaoJogo jogo={j} jogosApi={jogosApi} onClick={handleClick} />
+                          : <div className="brk-jogo vazio" style={{ width:'100%' }}><div className="brk-jogo-meta">A definir</div></div>}
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
