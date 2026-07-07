@@ -27,11 +27,16 @@ const S = `
 .brk-chave:nth-child(2) .brk-chave-nome::after { background: linear-gradient(90deg, rgba(77,159,255,.3), transparent); }
 
 .brk-arvore { display: grid; grid-template-columns: repeat(4, minmax(215px, 1fr)); gap: 10px 20px; overflow-x: auto; padding-bottom: 8px; }
-.brk-arvore .brk-jogo { margin-bottom: 0; align-self: center; width: 100%; }
-.brk-cabecalhos { display: grid; grid-template-columns: repeat(4, minmax(215px, 1fr)); gap: 0 20px; margin-bottom: 10px; }
+.brk-arvore { position: relative; }
+.brk-arvore .brk-jogo { margin-bottom: 0; align-self: center; width: 100%; z-index: 2; position: relative; }
+.brk-cabecalhos { display: grid; grid-template-columns: repeat(4, minmax(215px, 1fr)); gap: 0 40px; margin-bottom: 12px; }
 .brk-coluna-titulo { font-size: 10px; font-weight: 700; color: #9aabc7; text-transform: uppercase; letter-spacing: .1em; text-align: center; }
 
-.brk-jogo { background: #0f1520; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; padding: 10px 12px; margin-bottom: 16px; transition: all .15s; }
+/* Conectores SVG: linhas em L entre as fases */
+.brk-conectores { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+.brk-conectores path { stroke: rgba(255,255,255,.1); stroke-width: 1.5; fill: none; }
+
+.brk-jogo { background: #0f1520; border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 8px 10px; margin-bottom: 12px; transition: all .15s; }
 .brk-jogo.clicavel { cursor: pointer; }
 .brk-jogo.clicavel:hover { background: #141c2a; border-color: rgba(0,229,160,.25); transform: translateY(-1px); }
 .brk-jogo.live { border-color: rgba(255,77,109,.35); }
@@ -246,7 +251,7 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
                     <div className="brk-coluna-titulo">Quartas</div>
                     <div className="brk-coluna-titulo">Semifinal</div>
                   </div>
-                  <div className="brk-arvore" style={{ gridTemplateRows: 'repeat(16, minmax(0, auto))' }}>
+                  <div className="brk-arvore" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(215px, 1fr))', gridTemplateRows: 'repeat(16, minmax(0, auto))', gap: '0 40px', position: 'relative' }}>
                     {/* Segunda rodada: 16 slots, 1 linha cada */}
                     {chave.segunda.map((j, i) => (
                       <div key={`s${i}`} style={{ gridColumn: 1, gridRow: i + 1, display:'flex' }}>
@@ -279,6 +284,45 @@ export default function Chaveamento({ jogos: jogosApi, onSelectJogo }) {
                           : <div className="brk-jogo vazio" style={{ width:'100%' }}><div className="brk-jogo-meta">A definir</div></div>}
                       </div>
                     ))}
+                    {/* Conectores em L entre as colunas — 16 linhas na col 1, 8 na 2, 4 na 3, 2 na 4 */}
+                    <svg className="brk-conectores" viewBox="0 0 1000 1600" preserveAspectRatio="none">
+                      {/* Segunda → Oitavas (16→8): pares se juntam */}
+                      {Array.from({ length: 8 }).map((_, i) => {
+                        const y1 = 50 + i * 200;
+                        const y2 = y1 + 100;
+                        const yMid = (y1 + y2) / 2;
+                        return (
+                          <g key={`c1-${i}`}>
+                            <path d={`M 220 ${y1} H 240 V ${yMid} H 260`}/>
+                            <path d={`M 220 ${y2} H 240 V ${yMid} H 260`}/>
+                          </g>
+                        );
+                      })}
+                      {/* Oitavas → Quartas (8→4) */}
+                      {Array.from({ length: 4 }).map((_, i) => {
+                        const y1 = 100 + i * 400;
+                        const y2 = y1 + 200;
+                        const yMid = (y1 + y2) / 2;
+                        return (
+                          <g key={`c2-${i}`}>
+                            <path d={`M 470 ${y1} H 490 V ${yMid} H 510`}/>
+                            <path d={`M 470 ${y2} H 490 V ${yMid} H 510`}/>
+                          </g>
+                        );
+                      })}
+                      {/* Quartas → Semis (4→2) */}
+                      {Array.from({ length: 2 }).map((_, i) => {
+                        const y1 = 200 + i * 800;
+                        const y2 = y1 + 400;
+                        const yMid = (y1 + y2) / 2;
+                        return (
+                          <g key={`c3-${i}`}>
+                            <path d={`M 720 ${y1} H 740 V ${yMid} H 760`}/>
+                            <path d={`M 720 ${y2} H 740 V ${yMid} H 760`}/>
+                          </g>
+                        );
+                      })}
+                    </svg>
                   </div>
                 </div>
               ))}
