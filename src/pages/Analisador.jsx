@@ -433,12 +433,24 @@ export default function Analisador({ jogo, onVoltar }) {
                   border: aoVivoA ? '1px solid rgba(255,77,109,.25)' : '1px solid rgba(255,255,255,.1)',
                   animation: aoVivoA ? 'anapulse 1.6s infinite' : 'none',
                 }}>
-                  {aoVivoA ? `● AO VIVO${relogio ? ` ${relogio}` : ''}` : 'ENCERRADO'}
+                  {aoVivoA
+                    ? `● AO VIVO${relogio ? ` ${relogio}` : ''}`
+                    : `ENCERRADO${placarR.penaltisCasa != null ? ' · PÊN.' : jogo.prorrogacao ? ' · PRORR.' : ''}`}
                 </span>
                 <div style={{ display:'flex', alignItems:'baseline', gap:10 }}>
-                  <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?26:32, fontWeight:700, color: aoVivoA ? '#ff4d6d' : 'var(--text, #f0f4ff)' }}>{placarR.casa}</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?26:32, fontWeight:700, color: aoVivoA ? '#ff4d6d' : 'var(--text, #f0f4ff)' }}>
+                    {placarR.casa}
+                    {placarR.penaltisCasa != null && (
+                      <span style={{ fontSize: isMob?13:15, color:'var(--text2, #c6d1e6)', marginLeft:4 }}>({placarR.penaltisCasa})</span>
+                    )}
+                  </span>
                   <span style={{ fontSize:14, color:'var(--text3, #9aabc7)', fontWeight:700 }}>x</span>
-                  <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?26:32, fontWeight:700, color: aoVivoA ? '#ff4d6d' : 'var(--text, #f0f4ff)' }}>{placarR.fora}</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize: isMob?26:32, fontWeight:700, color: aoVivoA ? '#ff4d6d' : 'var(--text, #f0f4ff)' }}>
+                    {placarR.fora}
+                    {placarR.penaltisFora != null && (
+                      <span style={{ fontSize: isMob?13:15, color:'var(--text2, #c6d1e6)', marginLeft:4 }}>({placarR.penaltisFora})</span>
+                    )}
+                  </span>
                 </div>
               </div>
             )}
