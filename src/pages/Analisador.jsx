@@ -312,7 +312,6 @@ export default function Analisador({ jogo, onVoltar }) {
     catch { return 500; }
   });
   const [pernasCombinada, setPernasCombinada] = useState([]);
-  const [modalCombinada, setModalCombinada] = useState(false);
 
   const salvarBankroll = (v) => {
     setBankroll(v);
@@ -668,17 +667,31 @@ export default function Analisador({ jogo, onVoltar }) {
               const CardMercado = ({ m }) => {
                 const nv = NIVEIS[m.nivel];
                 const temValor = m.nivel === 'forte' || m.nivel === 'valor';
-                const naCombinada = pernasCombinada.find(p => p.id === m.id);
-                // Kelly: fração do bankroll sugerida (quarter Kelly, seguro)
+                const naCombinada = !!pernasCombinada.find(p => p.id === m.id);
                 const kellyPct = m.kellyPct ?? 0;
                 const stakeSugerido = temValor && kellyPct > 0
                   ? Math.max(5, Math.round(bankroll * kellyPct / 100))
                   : 0;
                 const retornoSugerido = stakeSugerido * m.odd;
-                const lucroSugerido = retornoSugerido - stakeSugerido;
+
+                const cardStyle = {
+                  background: naCombinada ? `${nv.cor}18` : nv.bg,
+                  border: `${naCombinada ? 2 : 1}px solid ${naCombinada ? nv.cor : nv.borda}`,
+                  borderRadius:14, padding:'14px 16px', marginBottom:10,
+                  cursor: temValor ? 'pointer' : 'default',
+                  transition:'all .15s',
+                  position:'relative',
+                };
 
                 return (
-                  <div style={{ background: nv.bg, border:`1px solid ${nv.borda}`, borderRadius:14, padding:'14px 16px', marginBottom:10 }}>
+                  <div style={cardStyle} onClick={() => temValor && togglePerna(m)}>
+                    {/* Selo de "selecionado" no canto */}
+                    {naCombinada && (
+                      <div style={{ position:'absolute', top:-8, right:14, background:nv.cor, color:'#000', fontSize:9, fontWeight:900, letterSpacing:'.1em', padding:'3px 10px', borderRadius:20 }}>
+                        ✓ NA COMBINADA
+                      </div>
+                    )}
+
                     <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
                       <div style={{ flex:1, minWidth:0 }}>
                         <div style={{ fontSize:10, fontWeight:800, letterSpacing:'.1em', color:nv.cor, marginBottom:4 }}>{nv.rotulo}</div>
@@ -692,7 +705,6 @@ export default function Analisador({ jogo, onVoltar }) {
                       </div>
                     </div>
 
-                    {/* Nossa estimativa vs preço da casa */}
                     <div style={{ display:'flex', gap:14, marginTop:10, fontSize:11, color:'var(--text3, #9aabc7)', flexWrap:'wrap' }}>
                       <span>Nossa estimativa: <strong style={{ color:'var(--text, #f0f4ff)', fontFamily:'var(--font-mono)' }}>{m.probFinal}%</strong></span>
                       <span>Preço da casa: <strong style={{ color:'var(--text2, #c6d1e6)', fontFamily:'var(--font-mono)' }}>{m.probJusta}%</strong></span>
@@ -701,29 +713,24 @@ export default function Analisador({ jogo, onVoltar }) {
                       )}
                     </div>
 
-                    {/* Evidência verificável */}
                     <div style={{ marginTop:8, fontSize:12, color:'var(--text2, #c6d1e6)', lineHeight:1.6 }}>
                       📊 {m.evidencia}
                       {m.h2h && <span style={{ color:'var(--text3, #9aabc7)' }}> · {m.h2h.texto}</span>}
                     </div>
 
-                    {/* Simulador de retorno + Kelly (só pra sinais com valor) */}
+                    {/* Rodapé compacto: só stake sugerido (individual) + dica de clique */}
                     {temValor && stakeSugerido > 0 && (
-                      <div style={{ marginTop:12, padding:'10px 12px', background:'rgba(0,0,0,.25)', border:`1px dashed ${nv.borda}`, borderRadius:10, display:'flex', alignItems:'center', gap:16, flexWrap:'wrap', fontSize:12 }}>
-                        <div>
-                          <div style={{ fontSize:9, fontWeight:700, letterSpacing:'.1em', color:'var(--text3,#9aabc7)', textTransform:'uppercase', marginBottom:2 }}>Stake sugerido</div>
-                          <div style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color:nv.cor }}>R$ {stakeSugerido}</div>
-                          <div style={{ fontSize:10, color:'var(--text3,#9aabc7)', marginTop:2 }}>{kellyPct.toFixed(2)}% do bankroll (Kelly)</div>
-                        </div>
-                        <div style={{ borderLeft:'1px solid rgba(255,255,255,.08)', paddingLeft:16 }}>
-                          <div style={{ fontSize:9, fontWeight:700, letterSpacing:'.1em', color:'var(--text3,#9aabc7)', textTransform:'uppercase', marginBottom:2 }}>Se acertar</div>
-                          <div style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color:'var(--text,#f0f4ff)' }}>R$ {retornoSugerido.toFixed(0)}</div>
-                          <div style={{ fontSize:10, color:'var(--text3,#9aabc7)', marginTop:2 }}>Lucro: +R$ {lucroSugerido.toFixed(0)}</div>
-                        </div>
-                        <button onClick={() => togglePerna(m)}
-                          style={{ marginLeft:'auto', padding:'6px 12px', borderRadius:8, border:`1px solid ${naCombinada ? nv.cor : 'rgba(255,255,255,.15)'}`, background: naCombinada ? `${nv.cor}22` : 'transparent', color: naCombinada ? nv.cor : 'var(--text2,#c6d1e6)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                          {naCombinada ? '✓ Na combinada' : '+ Combinar'}
-                        </button>
+                      <div style={{ marginTop:12, paddingTop:12, borderTop:`1px dashed ${nv.borda}`, display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, fontSize:12, color:'var(--text3,#9aabc7)', flexWrap:'wrap' }}>
+                        <span>
+                          <span style={{ color:'var(--text3,#9aabc7)' }}>Sugerido: </span>
+                          <strong style={{ color:nv.cor, fontFamily:'var(--font-mono)' }}>R$ {stakeSugerido}</strong>
+                          <span style={{ color:'var(--text3,#9aabc7)' }}> → </span>
+                          <strong style={{ color:'var(--text,#f0f4ff)', fontFamily:'var(--font-mono)' }}>R$ {retornoSugerido.toFixed(0)}</strong>
+                          <span style={{ color:'var(--text3,#9aabc7)', fontSize:10, marginLeft:6 }}>({kellyPct.toFixed(1)}% do bankroll)</span>
+                        </span>
+                        <span style={{ fontSize:10, fontWeight:700, letterSpacing:'.06em', color: naCombinada ? nv.cor : 'var(--text3,#9aabc7)', textTransform:'uppercase' }}>
+                          {naCombinada ? 'Toque pra remover' : '👆 Toque pra combinar'}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -981,32 +988,28 @@ export default function Analisador({ jogo, onVoltar }) {
         {/* ── PLACARES ── */}
       </div>
 
-      {/* Botão flutuante de combinada — só assinante */}
-      {assinante && pernasCombinada.length >= 2 && !modalCombinada && (
-        <button onClick={() => setModalCombinada(true)}
-          style={{ position:'fixed', bottom:24, right:24, padding:'14px 22px', borderRadius:999, border:'none', background:'linear-gradient(135deg,#00e5a0,#00c88a)', color:'#000', fontSize:14, fontWeight:800, cursor:'pointer', boxShadow:'0 12px 32px rgba(0,229,160,.35)', display:'flex', alignItems:'center', gap:10, zIndex:100 }}>
-          <span style={{ background:'#000', color:'#00e5a0', borderRadius:999, minWidth:22, height:22, display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:12 }}>{pernasCombinada.length}</span>
-          Simular combinada →
-        </button>
+      {/* Painel sticky de combinada — aparece com 1+ perna selecionada */}
+      {/* Espaço extra pra o conteúdo não ficar coberto pela barra sticky */}
+      {assinante && pernasCombinada.length > 0 && <div style={{ height: 90 }} />}
+      {assinante && pernasCombinada.length > 0 && (
+        <PainelCombinada
+          pernas={pernasCombinada}
+          bankroll={bankroll}
+          aoRemover={id => setPernasCombinada(pernas => pernas.filter(p => p.id !== id))}
+          aoLimpar={() => setPernasCombinada([])}
+        />
       )}
-
-      {/* Modal de combinada */}
-      {modalCombinada && <ModalCombinada
-        pernas={pernasCombinada}
-        bankroll={bankroll}
-        aoRemover={id => setPernasCombinada(pernas => pernas.filter(p => p.id !== id))}
-        aoFechar={() => setModalCombinada(false)}
-        aoLimpar={() => { setPernasCombinada([]); setModalCombinada(false); }}
-      />}
     </>
   );
 }
 
-/* Modal do simulador de combinada — matemática honesta */
-function ModalCombinada({ pernas, bankroll, aoRemover, aoFechar, aoLimpar }) {
+/* Painel sticky da combinada — sempre visível, atualiza ao vivo.
+ * Desktop: barra inferior fixa; Mobile: mesma barra mas colapsada por padrão. */
+function PainelCombinada({ pernas, bankroll, aoRemover, aoLimpar }) {
+  const [expandido, setExpandido] = useState(false);
   const [stake, setStake] = useState(() => Math.max(10, Math.round(bankroll * 0.02)));
 
-  // Cálculo direto no cliente — não precisa bater na API pra simular
+  // Cálculo ao vivo
   const oddCombinada  = pernas.reduce((a, p) => a * p.odd, 1);
   const probCombinada = pernas.reduce((a, p) => a * p.prob, 1);
   const retornoBruto  = stake * oddCombinada;
@@ -1014,90 +1017,101 @@ function ModalCombinada({ pernas, bankroll, aoRemover, aoFechar, aoLimpar }) {
   const evValor       = stake * (probCombinada * oddCombinada - 1);
   const evPercent     = (probCombinada * oddCombinada - 1) * 100;
 
-  // Comparação: mesmo stake dividido entre as pernas separadas
   const stakePorPerna = stake / pernas.length;
   const evSeparado = pernas.reduce((a, p) =>
     a + stakePorPerna * (p.prob * p.odd - 1), 0);
-
   const combinadaEhMelhor = evValor > evSeparado;
 
   return (
-    <div onClick={aoFechar} style={{ position:'fixed', inset:0, background:'rgba(5,8,13,.85)', backdropFilter:'blur(6px)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, zIndex:500 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background:'#0f1520', border:'1px solid rgba(255,255,255,.1)', borderRadius:18, padding:24, width:'100%', maxWidth:520, maxHeight:'90vh', overflowY:'auto' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-          <div>
-            <div style={{ fontSize:10, fontWeight:800, letterSpacing:'.12em', color:'#00e5a0', marginBottom:2 }}>SIMULADOR</div>
-            <h3 style={{ margin:0, fontFamily:'var(--font-display)', fontSize:20, fontWeight:800, color:'var(--text,#f0f4ff)' }}>Combinada de {pernas.length} sinais</h3>
-          </div>
-          <button onClick={aoFechar} style={{ background:'none', border:'none', color:'var(--text3,#9aabc7)', fontSize:22, cursor:'pointer', padding:4 }}>✕</button>
-        </div>
-
-        {/* Pernas */}
-        <div style={{ marginBottom:16 }}>
-          {pernas.map(p => (
-            <div key={p.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.06)', borderRadius:10, marginBottom:6 }}>
-              <div style={{ flex:1, fontSize:13, color:'var(--text,#f0f4ff)', fontWeight:600 }}>{p.mercado}</div>
-              <div style={{ fontFamily:'var(--font-mono)', fontSize:13, color:'var(--text2,#c6d1e6)', fontWeight:700 }}>{p.odd.toFixed(2)}</div>
-              <button onClick={() => aoRemover(p.id)} style={{ background:'none', border:'none', color:'var(--text3,#9aabc7)', cursor:'pointer', fontSize:16, padding:'0 4px' }}>×</button>
+    <div style={{
+      position:'fixed', left:0, right:0, bottom:0,
+      background:'linear-gradient(180deg, rgba(15,21,32,.98), rgba(9,13,20,.99))',
+      borderTop:'1px solid rgba(0,229,160,.3)',
+      boxShadow:'0 -12px 40px rgba(0,0,0,.5)',
+      zIndex:100,
+      backdropFilter:'blur(12px)',
+    }}>
+      <div style={{ maxWidth:900, margin:'0 auto', padding:'12px 16px' }}>
+        {/* Header sempre visível: resumo + toggle */}
+        <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+          <span style={{ background:'#00e5a0', color:'#000', borderRadius:999, minWidth:26, height:26, display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900 }}>
+            {pernas.length}
+          </span>
+          <div style={{ flex:1, minWidth:200 }}>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.1em', color:'#9aabc7', textTransform:'uppercase' }}>
+              Combinada · {pernas.length === 1 ? '1 perna' : `${pernas.length} pernas`}
             </div>
-          ))}
-        </div>
-
-        {/* Stake */}
-        <div style={{ marginBottom:16 }}>
-          <label style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', color:'var(--text3,#9aabc7)', textTransform:'uppercase' }}>Valor a apostar</label>
-          <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:6 }}>
-            <span style={{ fontFamily:'var(--font-mono)', fontSize:16, color:'var(--text2,#c6d1e6)' }}>R$</span>
-            <input type="number" value={stake} onChange={e => setStake(Math.max(1, parseFloat(e.target.value) || 0))}
-              style={{ background:'rgba(0,0,0,.3)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'8px 12px', color:'var(--text,#f0f4ff)', fontFamily:'var(--font-mono)', fontSize:20, fontWeight:700, flex:1, outline:'none' }}
-            />
-          </div>
-        </div>
-
-        {/* Resultado */}
-        <div style={{ background:'linear-gradient(135deg, rgba(0,229,160,.08), rgba(77,159,255,.04))', border:'1px solid rgba(0,229,160,.25)', borderRadius:14, padding:16, marginBottom:14 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:10 }}>
-            <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', color:'var(--text3,#9aabc7)', textTransform:'uppercase' }}>Odd combinada</div>
-            <div style={{ fontFamily:'var(--font-mono)', fontSize:22, fontWeight:700, color:'var(--text,#f0f4ff)' }}>{oddCombinada.toFixed(2)}</div>
-          </div>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:6 }}>
-            <div style={{ fontSize:12, color:'var(--text3,#9aabc7)' }}>Se acertar tudo</div>
-            <div style={{ fontFamily:'var(--font-mono)', fontSize:20, fontWeight:700, color:'#00e5a0' }}>R$ {retornoBruto.toFixed(2)}</div>
-          </div>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:6 }}>
-            <div style={{ fontSize:12, color:'var(--text3,#9aabc7)' }}>Lucro potencial</div>
-            <div style={{ fontFamily:'var(--font-mono)', fontSize:14, color:'var(--text2,#c6d1e6)' }}>+R$ {lucroBruto.toFixed(2)}</div>
-          </div>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
-            <div style={{ fontSize:12, color:'var(--text3,#9aabc7)' }}>Chance real de acertar tudo</div>
-            <div style={{ fontFamily:'var(--font-mono)', fontSize:13, color:'var(--text2,#c6d1e6)' }}>{(probCombinada * 100).toFixed(1)}%</div>
-          </div>
-        </div>
-
-        {/* Análise honesta */}
-        <div style={{ padding:14, background: combinadaEhMelhor ? 'rgba(0,229,160,.06)' : 'rgba(255,184,48,.06)', border:`1px solid ${combinadaEhMelhor ? 'rgba(0,229,160,.25)' : 'rgba(255,184,48,.25)'}`, borderRadius:12, marginBottom:14 }}>
-          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'.1em', color: combinadaEhMelhor ? '#00e5a0' : '#ffb830', marginBottom:6 }}>
-            {combinadaEhMelhor ? '✓ MATEMATICAMENTE VANTAJOSA' : '⚠ CUIDADO'}
-          </div>
-          <div style={{ fontSize:12.5, color:'var(--text2,#c6d1e6)', lineHeight:1.6 }}>
-            <div style={{ marginBottom:6 }}>
-              <strong>EV desta combinada:</strong> <span style={{ fontFamily:'var(--font-mono)', color: evValor >= 0 ? '#00e5a0' : '#ff4d6d' }}>{evValor >= 0 ? '+' : ''}R$ {evValor.toFixed(2)} ({evPercent >= 0 ? '+' : ''}{evPercent.toFixed(1)}%)</span>
-            </div>
-            <div style={{ marginBottom:6 }}>
-              <strong>Se apostasse R$ {stakePorPerna.toFixed(0)} em cada perna separada:</strong> EV total <span style={{ fontFamily:'var(--font-mono)', color: evSeparado >= 0 ? '#00e5a0' : '#ff4d6d' }}>{evSeparado >= 0 ? '+' : ''}R$ {evSeparado.toFixed(2)}</span>
-            </div>
-            <div style={{ fontSize:11.5, color:'var(--text3,#9aabc7)', marginTop:10, paddingTop:10, borderTop:'1px solid rgba(255,255,255,.06)', lineHeight:1.6 }}>
-              {combinadaEhMelhor
-                ? 'Com estas pernas, a combinada tem EV maior que apostar separado. Isso é raro e acontece quando várias pernas têm valor forte. Ainda assim, a variância é muito maior — considere isso.'
-                : 'Apostar cada perna separadamente tem EV maior (ou perde menos). A múltipla exige acertar TUDO — perde uma, perde tudo. Considere separar.'}
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:16, fontWeight:800, color:'#f0f4ff', marginTop:2 }}>
+              Odd {oddCombinada.toFixed(2)}
+              <span style={{ color:'#9aabc7', margin:'0 8px' }}>·</span>
+              R$ <input
+                type="number"
+                value={stake}
+                onChange={e => setStake(Math.max(1, parseFloat(e.target.value) || 0))}
+                onClick={e => e.stopPropagation()}
+                style={{ background:'rgba(0,0,0,.4)', border:'1px solid rgba(0,229,160,.3)', borderRadius:6, padding:'2px 8px', color:'#f0f4ff', fontFamily:'var(--font-mono)', fontSize:16, fontWeight:800, width:80, outline:'none' }}
+              />
+              <span style={{ color:'#9aabc7', margin:'0 8px' }}>→</span>
+              <span style={{ color:'#00e5a0' }}>R$ {retornoBruto.toFixed(0)}</span>
             </div>
           </div>
+          <button onClick={() => setExpandido(x => !x)}
+            style={{ padding:'8px 14px', borderRadius:8, border:'1px solid rgba(255,255,255,.15)', background:'transparent', color:'#c6d1e6', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+            {expandido ? '▾ Recolher' : '▴ Detalhes'}
+          </button>
+          <button onClick={aoLimpar}
+            style={{ padding:'8px 14px', borderRadius:8, border:'1px solid rgba(255,77,109,.3)', background:'transparent', color:'#ff4d6d', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+            Limpar
+          </button>
         </div>
 
-        <div style={{ display:'flex', gap:8 }}>
-          <button onClick={aoLimpar} style={{ flex:1, padding:'12px', borderRadius:10, border:'1px solid rgba(255,77,109,.3)', background:'transparent', color:'#ff4d6d', fontWeight:700, cursor:'pointer', fontSize:13 }}>Limpar seleção</button>
-          <button onClick={aoFechar} style={{ flex:1, padding:'12px', borderRadius:10, border:'none', background:'#00e5a0', color:'#000', fontWeight:800, cursor:'pointer', fontSize:13 }}>Voltar</button>
-        </div>
+        {/* Detalhes expandidos */}
+        {expandido && (
+          <div style={{ marginTop:14, paddingTop:14, borderTop:'1px solid rgba(255,255,255,.06)' }}>
+            {/* Pernas com botão remover */}
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', color:'#9aabc7', textTransform:'uppercase', marginBottom:8 }}>Pernas</div>
+              {pernas.map(p => (
+                <div key={p.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.06)', borderRadius:8, marginBottom:5 }}>
+                  <div style={{ flex:1, fontSize:12, color:'#f0f4ff' }}>{p.mercado}</div>
+                  <div style={{ fontFamily:'var(--font-mono)', fontSize:12, color:'#c6d1e6', fontWeight:700 }}>{p.odd.toFixed(2)}</div>
+                  <button onClick={() => aoRemover(p.id)}
+                    style={{ background:'none', border:'none', color:'#9aabc7', cursor:'pointer', fontSize:16, padding:'0 4px' }}>×</button>
+                </div>
+              ))}
+            </div>
+
+            {/* Números detalhados */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))', gap:10, marginBottom:14 }}>
+              {[
+                { l:'Lucro potencial', v:`+R$ ${lucroBruto.toFixed(0)}`, c:'#00e5a0' },
+                { l:'Chance real', v:`${(probCombinada*100).toFixed(1)}%`, c:'#c6d1e6' },
+                { l:'EV desta combinada', v:`${evPercent >= 0 ? '+' : ''}${evPercent.toFixed(1)}%`, c: evPercent >= 0 ? '#00e5a0' : '#ff4d6d' },
+                { l:'EV em R$', v:`${evValor >= 0 ? '+' : ''}R$ ${evValor.toFixed(2)}`, c: evValor >= 0 ? '#00e5a0' : '#ff4d6d' },
+              ].map((x,i) => (
+                <div key={i} style={{ padding:10, background:'rgba(255,255,255,.02)', borderRadius:8, border:'1px solid rgba(255,255,255,.05)' }}>
+                  <div style={{ fontSize:9, fontWeight:700, letterSpacing:'.1em', color:'#9aabc7', textTransform:'uppercase', marginBottom:4 }}>{x.l}</div>
+                  <div style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color:x.c }}>{x.v}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Análise honesta */}
+            {pernas.length > 1 && (
+              <div style={{ padding:12, background: combinadaEhMelhor ? 'rgba(0,229,160,.06)' : 'rgba(255,184,48,.06)', border:`1px solid ${combinadaEhMelhor ? 'rgba(0,229,160,.25)' : 'rgba(255,184,48,.25)'}`, borderRadius:10 }}>
+                <div style={{ fontSize:11, fontWeight:800, letterSpacing:'.1em', color: combinadaEhMelhor ? '#00e5a0' : '#ffb830', marginBottom:6 }}>
+                  {combinadaEhMelhor ? '✓ MATEMATICAMENTE VANTAJOSA' : '⚠ CUIDADO'}
+                </div>
+                <div style={{ fontSize:12, color:'#c6d1e6', lineHeight:1.6 }}>
+                  Apostando R$ {stakePorPerna.toFixed(0)} em cada perna <strong>separada</strong>, o EV total seria <strong style={{ color: evSeparado >= 0 ? '#00e5a0' : '#ff4d6d', fontFamily:'var(--font-mono)' }}>{evSeparado >= 0 ? '+' : ''}R$ {evSeparado.toFixed(2)}</strong>.
+                  {' '}{combinadaEhMelhor
+                    ? 'A combinada rende EV maior, mas a variância também é bem maior — se errar uma, perde tudo.'
+                    : 'Separado rende EV maior. A múltipla exige acertar TUDO — considere separar as apostas.'}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
