@@ -307,6 +307,25 @@ export default function Analisador({ jogo, onVoltar }) {
   const [evento, setEvento] = useState(null); // local, escalações, banco
   const [analise, setAnalise] = useState(null);
   const [analiseStatus, setAnaliseStatus] = useState('carregando');
+  const [bankroll, setBankroll] = useState(() => {
+    try { return parseFloat(localStorage.getItem('sinalodds_bankroll')) || 500; }
+    catch { return 500; }
+  });
+  const [pernasCombinada, setPernasCombinada] = useState([]);
+  const [modalCombinada, setModalCombinada] = useState(false);
+
+  const salvarBankroll = (v) => {
+    setBankroll(v);
+    try { localStorage.setItem('sinalodds_bankroll', String(v)); } catch { /* ok */ }
+  };
+
+  const togglePerna = (m) => {
+    setPernasCombinada(pernas => {
+      const jaTem = pernas.find(p => p.id === m.id);
+      if (jaTem) return pernas.filter(p => p.id !== m.id);
+      return [...pernas, { id: m.id, mercado: m.mercado, odd: m.odd, prob: m.probFinal / 100 }];
+    });
+  };
 
   // Jogo rolando/encerrado: abre em Estatísticas (sugestões pré-jogo
   // ficam desatualizadas e são ocultadas)
@@ -636,6 +655,16 @@ export default function Analisador({ jogo, onVoltar }) {
 
               const CardMercado = ({ m }) => {
                 const nv = NIVEIS[m.nivel];
+                const temValor = m.nivel === 'forte' || m.nivel === 'valor';
+                const naCombinada = pernasCombinada.find(p => p.id === m.id);
+                // Kelly: fração do bankroll sugerida (quarter Kelly, seguro)
+                const kellyPct = m.kellyPct ?? 0;
+                const stakeSugerido = temValor && kellyPct > 0
+                  ? Math.max(5, Math.round(bankroll * kellyPct / 100))
+                  : 0;
+                const retornoSugerido = stakeSugerido * m.odd;
+                const lucroSugerido = retornoSugerido - stakeSugerido;
+
                 return (
                   <div style={{ background: nv.bg, border:`1px solid ${nv.borda}`, borderRadius:14, padding:'14px 16px', marginBottom:10 }}>
                     <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
@@ -665,12 +694,81 @@ export default function Analisador({ jogo, onVoltar }) {
                       📊 {m.evidencia}
                       {m.h2h && <span style={{ color:'var(--text3, #9aabc7)' }}> · {m.h2h.texto}</span>}
                     </div>
+
+                    {/* Simulador de retorno + Kelly (só pra sinais com valor) */}
+                    {temValor && stakeSugerido > 0 && (
+                      <div style={{ marginTop:12, padding:'10px 12px', background:'rgba(0,0,0,.25)', border:`1px dashed ${nv.borda}`, borderRadius:10, display:'flex', alignItems:'center', gap:16, flexWrap:'wrap', fontSize:12 }}>
+                        <div>
+                          <div style={{ fontSize:9, fontWeight:700, letterSpacing:'.1em', color:'var(--text3,#9aabc7)', textTransform:'uppercase', marginBottom:2 }}>Stake sugerido</div>
+                          <div style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color:nv.cor }}>R$ {stakeSugerido}</div>
+                          <div style={{ fontSize:10, color:'var(--text3,#9aabc7)', marginTop:2 }}>{kellyPct.toFixed(2)}% do bankroll (Kelly)</div>
+                        </div>
+                        <div style={{ borderLeft:'1px solid rgba(255,255,255,.08)', paddingLeft:16 }}>
+                          <div style={{ fontSize:9, fontWeight:700, letterSpacing:'.1em', color:'var(--text3,#9aabc7)', textTransform:'uppercase', marginBottom:2 }}>Se acertar</div>
+                          <div style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color:'var(--text,#f0f4ff)' }}>R$ {retornoSugerido.toFixed(0)}</div>
+                          <div style={{ fontSize:10, color:'var(--text3,#9aabc7)', marginTop:2 }}>Lucro: +R$ {lucroSugerido.toFixed(0)}</div>
+                        </div>
+                        <button onClick={() => togglePerna(m)}
+                          style={{ marginLeft:'auto', padding:'6px 12px', borderRadius:8, border:`1px solid ${naCombinada ? nv.cor : 'rgba(255,255,255,.15)'}`, background: naCombinada ? `${nv.cor}22` : 'transparent', color: naCombinada ? nv.cor : 'var(--text2,#c6d1e6)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                          {naCombinada ? '✓ Na combinada' : '+ Combinar'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               };
 
+              // Total potencial se apostar todos os sinais com valor
+              const investimentoTotal = comValor.reduce((acc, m) => {
+                const k = m.kellyPct ?? 0;
+                return acc + (k > 0 ? Math.max(5, Math.round(bankroll * k / 100)) : 0);
+              }, 0);
+              const retornoPotencialMedio = comValor.reduce((acc, m) => {
+                const k = m.kellyPct ?? 0;
+                const stake = k > 0 ? Math.max(5, Math.round(bankroll * k / 100)) : 0;
+                return acc + stake * (m.probFinal / 100) * m.odd;
+              }, 0);
+
               return (
                 <>
+                  {/* Bankroll + resumo do potencial */}
+                  {comValor.length > 0 && (
+                    <div style={{ padding:'14px 16px', background:'linear-gradient(135deg, rgba(0,229,160,.06), rgba(77,159,255,.04))', border:'1px solid rgba(0,229,160,.22)', borderRadius:14, marginBottom:14 }}>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+                        <div>
+                          <label style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', color:'var(--text3,#9aabc7)', textTransform:'uppercase' }}>Meu bankroll</label>
+                          <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:4 }}>
+                            <span style={{ fontFamily:'var(--font-mono)', fontSize:16, color:'var(--text2,#c6d1e6)' }}>R$</span>
+                            <input
+                              type="number"
+                              value={bankroll}
+                              onChange={e => salvarBankroll(Math.max(0, parseFloat(e.target.value) || 0))}
+                              style={{ background:'rgba(0,0,0,.3)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'6px 10px', color:'var(--text,#f0f4ff)', fontFamily:'var(--font-mono)', fontSize:18, fontWeight:700, width:100, outline:'none' }}
+                            />
+                          </div>
+                        </div>
+                        <div style={{ textAlign:'right' }}>
+                          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', color:'var(--text3,#9aabc7)', textTransform:'uppercase', marginBottom:4 }}>
+                            Se apostar tudo o sugerido
+                          </div>
+                          <div style={{ display:'flex', gap:14, alignItems:'baseline' }}>
+                            <div>
+                              <div style={{ fontSize:9, color:'var(--text3,#9aabc7)' }}>Investimento</div>
+                              <div style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color:'var(--text,#f0f4ff)' }}>R$ {investimentoTotal}</div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize:9, color:'var(--text3,#9aabc7)' }}>Retorno esperado</div>
+                              <div style={{ fontFamily:'var(--font-mono)', fontSize:15, fontWeight:700, color:'#00e5a0' }}>R$ {retornoPotencialMedio.toFixed(0)}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize:11, color:'var(--text3,#9aabc7)', marginTop:10, lineHeight:1.5 }}>
+                        💡 O <strong>stake sugerido</strong> em cada sinal usa o <strong>Critério de Kelly (quarter)</strong> — a fórmula que apostadores profissionais usam pra maximizar retorno de longo prazo controlando a variância. Retorno esperado = média ponderada dos cenários (acerto × probabilidade real).
+                      </div>
+                    </div>
+                  )}
+
                   <div style={{ padding:'10px 14px', background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.07)', borderRadius:10, fontSize:11.5, color:'var(--text3, #9aabc7)', lineHeight:1.6, marginBottom:16 }}>
                     Base: <strong style={{ color:'var(--text2, #c6d1e6)' }}>{analise.base.jogosAnalisados} jogos recentes</strong>
                     {analise.base.confrontosDiretos > 0 && <> + <strong style={{ color:'var(--text2, #c6d1e6)' }}>{analise.base.confrontosDiretos} confronto{analise.base.confrontosDiretos>1?'s':''} direto{analise.base.confrontosDiretos>1?'s':''}</strong></>}
@@ -870,6 +968,125 @@ export default function Analisador({ jogo, onVoltar }) {
 
         {/* ── PLACARES ── */}
       </div>
+
+      {/* Botão flutuante de combinada — só assinante */}
+      {assinante && pernasCombinada.length >= 2 && !modalCombinada && (
+        <button onClick={() => setModalCombinada(true)}
+          style={{ position:'fixed', bottom:24, right:24, padding:'14px 22px', borderRadius:999, border:'none', background:'linear-gradient(135deg,#00e5a0,#00c88a)', color:'#000', fontSize:14, fontWeight:800, cursor:'pointer', boxShadow:'0 12px 32px rgba(0,229,160,.35)', display:'flex', alignItems:'center', gap:10, zIndex:100 }}>
+          <span style={{ background:'#000', color:'#00e5a0', borderRadius:999, minWidth:22, height:22, display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:12 }}>{pernasCombinada.length}</span>
+          Simular combinada →
+        </button>
+      )}
+
+      {/* Modal de combinada */}
+      {modalCombinada && <ModalCombinada
+        pernas={pernasCombinada}
+        bankroll={bankroll}
+        aoRemover={id => setPernasCombinada(pernas => pernas.filter(p => p.id !== id))}
+        aoFechar={() => setModalCombinada(false)}
+        aoLimpar={() => { setPernasCombinada([]); setModalCombinada(false); }}
+      />}
     </>
+  );
+}
+
+/* Modal do simulador de combinada — matemática honesta */
+function ModalCombinada({ pernas, bankroll, aoRemover, aoFechar, aoLimpar }) {
+  const [stake, setStake] = useState(() => Math.max(10, Math.round(bankroll * 0.02)));
+
+  // Cálculo direto no cliente — não precisa bater na API pra simular
+  const oddCombinada  = pernas.reduce((a, p) => a * p.odd, 1);
+  const probCombinada = pernas.reduce((a, p) => a * p.prob, 1);
+  const retornoBruto  = stake * oddCombinada;
+  const lucroBruto    = retornoBruto - stake;
+  const evValor       = stake * (probCombinada * oddCombinada - 1);
+  const evPercent     = (probCombinada * oddCombinada - 1) * 100;
+
+  // Comparação: mesmo stake dividido entre as pernas separadas
+  const stakePorPerna = stake / pernas.length;
+  const evSeparado = pernas.reduce((a, p) =>
+    a + stakePorPerna * (p.prob * p.odd - 1), 0);
+
+  const combinadaEhMelhor = evValor > evSeparado;
+
+  return (
+    <div onClick={aoFechar} style={{ position:'fixed', inset:0, background:'rgba(5,8,13,.85)', backdropFilter:'blur(6px)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, zIndex:500 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background:'#0f1520', border:'1px solid rgba(255,255,255,.1)', borderRadius:18, padding:24, width:'100%', maxWidth:520, maxHeight:'90vh', overflowY:'auto' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+          <div>
+            <div style={{ fontSize:10, fontWeight:800, letterSpacing:'.12em', color:'#00e5a0', marginBottom:2 }}>SIMULADOR</div>
+            <h3 style={{ margin:0, fontFamily:'var(--font-display)', fontSize:20, fontWeight:800, color:'var(--text,#f0f4ff)' }}>Combinada de {pernas.length} sinais</h3>
+          </div>
+          <button onClick={aoFechar} style={{ background:'none', border:'none', color:'var(--text3,#9aabc7)', fontSize:22, cursor:'pointer', padding:4 }}>✕</button>
+        </div>
+
+        {/* Pernas */}
+        <div style={{ marginBottom:16 }}>
+          {pernas.map(p => (
+            <div key={p.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.06)', borderRadius:10, marginBottom:6 }}>
+              <div style={{ flex:1, fontSize:13, color:'var(--text,#f0f4ff)', fontWeight:600 }}>{p.mercado}</div>
+              <div style={{ fontFamily:'var(--font-mono)', fontSize:13, color:'var(--text2,#c6d1e6)', fontWeight:700 }}>{p.odd.toFixed(2)}</div>
+              <button onClick={() => aoRemover(p.id)} style={{ background:'none', border:'none', color:'var(--text3,#9aabc7)', cursor:'pointer', fontSize:16, padding:'0 4px' }}>×</button>
+            </div>
+          ))}
+        </div>
+
+        {/* Stake */}
+        <div style={{ marginBottom:16 }}>
+          <label style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', color:'var(--text3,#9aabc7)', textTransform:'uppercase' }}>Valor a apostar</label>
+          <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:6 }}>
+            <span style={{ fontFamily:'var(--font-mono)', fontSize:16, color:'var(--text2,#c6d1e6)' }}>R$</span>
+            <input type="number" value={stake} onChange={e => setStake(Math.max(1, parseFloat(e.target.value) || 0))}
+              style={{ background:'rgba(0,0,0,.3)', border:'1px solid rgba(255,255,255,.1)', borderRadius:8, padding:'8px 12px', color:'var(--text,#f0f4ff)', fontFamily:'var(--font-mono)', fontSize:20, fontWeight:700, flex:1, outline:'none' }}
+            />
+          </div>
+        </div>
+
+        {/* Resultado */}
+        <div style={{ background:'linear-gradient(135deg, rgba(0,229,160,.08), rgba(77,159,255,.04))', border:'1px solid rgba(0,229,160,.25)', borderRadius:14, padding:16, marginBottom:14 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:10 }}>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', color:'var(--text3,#9aabc7)', textTransform:'uppercase' }}>Odd combinada</div>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:22, fontWeight:700, color:'var(--text,#f0f4ff)' }}>{oddCombinada.toFixed(2)}</div>
+          </div>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:6 }}>
+            <div style={{ fontSize:12, color:'var(--text3,#9aabc7)' }}>Se acertar tudo</div>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:20, fontWeight:700, color:'#00e5a0' }}>R$ {retornoBruto.toFixed(2)}</div>
+          </div>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:6 }}>
+            <div style={{ fontSize:12, color:'var(--text3,#9aabc7)' }}>Lucro potencial</div>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:14, color:'var(--text2,#c6d1e6)' }}>+R$ {lucroBruto.toFixed(2)}</div>
+          </div>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
+            <div style={{ fontSize:12, color:'var(--text3,#9aabc7)' }}>Chance real de acertar tudo</div>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:13, color:'var(--text2,#c6d1e6)' }}>{(probCombinada * 100).toFixed(1)}%</div>
+          </div>
+        </div>
+
+        {/* Análise honesta */}
+        <div style={{ padding:14, background: combinadaEhMelhor ? 'rgba(0,229,160,.06)' : 'rgba(255,184,48,.06)', border:`1px solid ${combinadaEhMelhor ? 'rgba(0,229,160,.25)' : 'rgba(255,184,48,.25)'}`, borderRadius:12, marginBottom:14 }}>
+          <div style={{ fontSize:11, fontWeight:800, letterSpacing:'.1em', color: combinadaEhMelhor ? '#00e5a0' : '#ffb830', marginBottom:6 }}>
+            {combinadaEhMelhor ? '✓ MATEMATICAMENTE VANTAJOSA' : '⚠ CUIDADO'}
+          </div>
+          <div style={{ fontSize:12.5, color:'var(--text2,#c6d1e6)', lineHeight:1.6 }}>
+            <div style={{ marginBottom:6 }}>
+              <strong>EV desta combinada:</strong> <span style={{ fontFamily:'var(--font-mono)', color: evValor >= 0 ? '#00e5a0' : '#ff4d6d' }}>{evValor >= 0 ? '+' : ''}R$ {evValor.toFixed(2)} ({evPercent >= 0 ? '+' : ''}{evPercent.toFixed(1)}%)</span>
+            </div>
+            <div style={{ marginBottom:6 }}>
+              <strong>Se apostasse R$ {stakePorPerna.toFixed(0)} em cada perna separada:</strong> EV total <span style={{ fontFamily:'var(--font-mono)', color: evSeparado >= 0 ? '#00e5a0' : '#ff4d6d' }}>{evSeparado >= 0 ? '+' : ''}R$ {evSeparado.toFixed(2)}</span>
+            </div>
+            <div style={{ fontSize:11.5, color:'var(--text3,#9aabc7)', marginTop:10, paddingTop:10, borderTop:'1px solid rgba(255,255,255,.06)', lineHeight:1.6 }}>
+              {combinadaEhMelhor
+                ? 'Com estas pernas, a combinada tem EV maior que apostar separado. Isso é raro e acontece quando várias pernas têm valor forte. Ainda assim, a variância é muito maior — considere isso.'
+                : 'Apostar cada perna separadamente tem EV maior (ou perde menos). A múltipla exige acertar TUDO — perde uma, perde tudo. Considere separar.'}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={aoLimpar} style={{ flex:1, padding:'12px', borderRadius:10, border:'1px solid rgba(255,77,109,.3)', background:'transparent', color:'#ff4d6d', fontWeight:700, cursor:'pointer', fontSize:13 }}>Limpar seleção</button>
+          <button onClick={aoFechar} style={{ flex:1, padding:'12px', borderRadius:10, border:'none', background:'#00e5a0', color:'#000', fontWeight:800, cursor:'pointer', fontSize:13 }}>Voltar</button>
+        </div>
+      </div>
+    </div>
   );
 }

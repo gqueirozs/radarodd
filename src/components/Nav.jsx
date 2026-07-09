@@ -30,7 +30,7 @@ export default function Nav({ page, setPage, apiStatus, ultimaAtualizacao }) {
       </svg>
     ),
   };
-  const links = [['home','Jogos'],['chaveamento','Mata-mata']];
+  const links = [['home','Jogos'],['chaveamento','Mata-mata'],['ranking','★ Ranking'],['historico','Histórico']];
 
   return (
     <>

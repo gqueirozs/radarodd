@@ -6,6 +6,8 @@ import Home from './pages/Home';
 import Analisador from './pages/Analisador';
 import Chaveamento from './pages/Chaveamento';
 import Premium from './pages/Premium';
+import Ranking from './pages/Ranking';
+import TrackRecord from './pages/TrackRecord';
 import { SkelCard } from './components/Skeleton';
 import PageTransition from './components/PageTransition';
 import { AuthProvider } from './auth/AuthContext';
@@ -70,9 +72,16 @@ function AppRotas() {
 
   // Nav continua falando "page"; traduzimos pra URL
   const page = location.pathname.startsWith('/mata-mata') ? 'chaveamento'
+    : location.pathname.startsWith('/ranking') ? 'ranking'
+    : location.pathname.startsWith('/historico') ? 'historico'
     : location.pathname.startsWith('/partida') ? 'analisador'
     : 'home';
-  const setPage = id => navigate(id === 'chaveamento' ? '/mata-mata' : '/');
+  const setPage = id => {
+    if (id === 'chaveamento') navigate('/mata-mata');
+    else if (id === 'ranking') navigate('/ranking');
+    else if (id === 'historico') navigate('/historico');
+    else navigate('/');
+  };
 
   const abrirPartida = jogo => navigate(`/partida/${jogo.id}`);
 
@@ -84,6 +93,8 @@ function AppRotas() {
           <Route path="/" element={<Home onSelectJogo={abrirPartida} jogos={jogos} apiStatus={apiStatus} />} />
           <Route path="/mata-mata" element={<Chaveamento jogos={jogos} onSelectJogo={abrirPartida} />} />
           <Route path="/premium" element={<Premium />} />
+        <Route path="/ranking" element={<Ranking />} />
+        <Route path="/historico" element={<TrackRecord />} />
           <Route path="/partida/:id" element={<PaginaPartida jogos={jogos} apiStatus={apiStatus} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
