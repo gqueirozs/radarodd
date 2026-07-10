@@ -656,17 +656,27 @@ export default function Analisador({ jogo, onVoltar }) {
 
             {analiseStatus === 'ok' && analise && (() => {
               const NIVEIS = {
-                forte:  { rotulo: 'VALOR FORTE', cor: '#00e5a0', bg: 'rgba(0,229,160,.07)',  borda: 'rgba(0,229,160,.3)' },
-                valor:  { rotulo: 'VALOR',       cor: '#4d9fff', bg: 'rgba(77,159,255,.06)', borda: 'rgba(77,159,255,.28)' },
-                neutro: { rotulo: 'NEUTRO',      cor: '#9aabc7', bg: 'transparent',          borda: 'rgba(255,255,255,.08)' },
-                evitar: { rotulo: 'SEM VALOR',   cor: '#ff4d6d', bg: 'transparent',          borda: 'rgba(255,255,255,.08)' },
+                forte:       { rotulo: '★ VALOR FORTE', cor: '#00e5a0', bg: 'rgba(0,229,160,.08)', borda: 'rgba(0,229,160,.35)', desc: 'Odd está barata em relação à chance real — aposta com vantagem estatística.' },
+                valor:       { rotulo: '● VALOR',       cor: '#4d9fff', bg: 'rgba(77,159,255,.06)', borda: 'rgba(77,159,255,.28)', desc: 'Odd um pouco melhor que a chance real — aposta favorável.' },
+                justo:       { rotulo: '○ PREÇO JUSTO', cor: '#c6d1e6', bg: 'transparent', borda: 'rgba(255,255,255,.12)', desc: 'Odd está próxima da probabilidade real. Nem ganha nem perde valor a longo prazo.' },
+                caro:        { rotulo: '▽ CARO',        cor: '#ffb830', bg: 'transparent', borda: 'rgba(255,184,48,.2)', desc: 'A casa cobra caro — apostar tem valor esperado negativo (perde ~5-10% por real apostado a longo prazo).' },
+                'muito-caro':{ rotulo: '▼ MUITO CARO',  cor: '#ff4d6d', bg: 'transparent', borda: 'rgba(255,77,109,.2)', desc: 'Odd está muito abaixo da chance real. Perde muito dinheiro no longo prazo — mesmo que o time provavelmente ganhe.' },
+                neutro:      { rotulo: '○ NEUTRO',      cor: '#9aabc7', bg: 'transparent', borda: 'rgba(255,255,255,.08)', desc: 'Sem dados suficientes.' },
               };
               const comValor = analise.mercados.filter(m => m.nivel==='forte' || m.nivel==='valor');
-              const semValor = analise.mercados.filter(m => m.nivel!=='forte' && m.nivel!=='valor');
+              // Agrupar TODOS os outros mercados por grupo (para exibir agrupado)
+              const outrosMercados = analise.mercados.filter(m => m.nivel !== 'forte' && m.nivel !== 'valor');
+              const gruposOutros = {};
+              for (const m of outrosMercados) {
+                const g = m.grupo || 'Outros';
+                if (!gruposOutros[g]) gruposOutros[g] = [];
+                gruposOutros[g].push(m);
+              }
 
               const CardMercado = ({ m }) => {
                 const nv = NIVEIS[m.nivel];
                 const temValor = m.nivel === 'forte' || m.nivel === 'valor';
+                const clicavel = !!m.odd; // qualquer mercado com odd é selecionável
                 const naCombinada = !!pernasCombinada.find(p => p.id === m.id);
                 const kellyPct = m.kellyPct ?? 0;
                 const stakeSugerido = temValor && kellyPct > 0
@@ -678,13 +688,13 @@ export default function Analisador({ jogo, onVoltar }) {
                   background: naCombinada ? `${nv.cor}18` : nv.bg,
                   border: `${naCombinada ? 2 : 1}px solid ${naCombinada ? nv.cor : nv.borda}`,
                   borderRadius:14, padding:'14px 16px', marginBottom:10,
-                  cursor: temValor ? 'pointer' : 'default',
+                  cursor: clicavel ? 'pointer' : 'default',
                   transition:'all .15s',
                   position:'relative',
                 };
 
                 return (
-                  <div style={cardStyle} onClick={() => temValor && togglePerna(m)}>
+                  <div style={cardStyle} onClick={() => clicavel && togglePerna(m)}>
                     {/* Selo de "selecionado" no canto */}
                     {naCombinada && (
                       <div style={{ position:'absolute', top:-8, right:14, background:nv.cor, color:'#000', fontSize:9, fontWeight:900, letterSpacing:'.1em', padding:'3px 10px', borderRadius:20 }}>
@@ -718,7 +728,7 @@ export default function Analisador({ jogo, onVoltar }) {
                       {m.h2h && <span style={{ color:'var(--text3, #9aabc7)' }}> · {m.h2h.texto}</span>}
                     </div>
 
-                    {/* Rodapé compacto: só stake sugerido (individual) + dica de clique */}
+                    {/* Rodapé: mostra sugestão financeira apenas pra sinais com valor */}
                     {temValor && stakeSugerido > 0 && (
                       <div style={{ marginTop:12, paddingTop:12, borderTop:`1px dashed ${nv.borda}`, display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, fontSize:12, color:'var(--text3,#9aabc7)', flexWrap:'wrap' }}>
                         <span>
@@ -730,6 +740,16 @@ export default function Analisador({ jogo, onVoltar }) {
                         </span>
                         <span style={{ fontSize:10, fontWeight:700, letterSpacing:'.06em', color: naCombinada ? nv.cor : 'var(--text3,#9aabc7)', textTransform:'uppercase' }}>
                           {naCombinada ? 'Toque pra remover' : '👆 Toque pra combinar'}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Para mercados sem valor mas com odd, explicar E permitir seleção */}
+                    {!temValor && clicavel && (
+                      <div style={{ marginTop:10, paddingTop:10, borderTop:`1px dashed ${nv.borda}`, display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, fontSize:11, color:'var(--text3,#9aabc7)', flexWrap:'wrap' }}>
+                        <span style={{ fontStyle:'italic', flex:1, minWidth:200 }}>{nv.desc}</span>
+                        <span style={{ fontSize:10, fontWeight:700, letterSpacing:'.06em', color: naCombinada ? nv.cor : 'var(--text3,#9aabc7)', textTransform:'uppercase' }}>
+                          {naCombinada ? 'Toque pra remover' : '👆 Selecionar mesmo assim'}
                         </span>
                       </div>
                     )}
@@ -806,10 +826,20 @@ export default function Analisador({ jogo, onVoltar }) {
 
                   {comValor.map(m => <CardMercado key={m.id} m={m} />)}
 
-                  {semValor.length > 0 && (
+                  {Object.keys(gruposOutros).length > 0 && (
                     <>
-                      <div className="ana-divider" style={{ marginTop: comValor.length ? 20 : 0 }}>Demais mercados analisados</div>
-                      {semValor.map(m => <CardMercado key={m.id} m={m} />)}
+                      <div className="ana-divider" style={{ marginTop: comValor.length ? 20 : 0 }}>
+                        Outros mercados analisados
+                      </div>
+                      <div style={{ fontSize:11, color:'var(--text3,#9aabc7)', marginBottom:14, lineHeight:1.6 }}>
+                        Mostramos <strong>todos os mercados</strong> com nossa análise — mesmo os que a casa está cobrando caro. Você pode selecionar qualquer um pra combinada; nós só destacamos onde há valor estatístico.
+                      </div>
+                      {Object.entries(gruposOutros).map(([grupo, mercados]) => (
+                        <div key={grupo} style={{ marginBottom:20 }}>
+                          <div style={{ fontSize:10, fontWeight:800, letterSpacing:'.14em', color:'var(--text3,#9aabc7)', textTransform:'uppercase', marginBottom:8 }}>{grupo}</div>
+                          {mercados.map(m => <CardMercado key={m.id} m={m} />)}
+                        </div>
+                      ))}
                     </>
                   )}
                 </>
